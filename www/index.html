@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Livre de recettes</title>
+<meta name="theme-color" content="#1F5FA8">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="app.css">
+<script src="config.js"></script>
+<style>
+/* Direction : batterie de cuisine émaillée — blanc émail, bleu cobalt de cocotte, moutarde en rappel.
+   Layout : colonne unique mobile d'abord, barre d'onglets en bas, grille de fiches au-delà de 600px. */
+:root{
+  --bg:#EEF1EE; --surface:#FFFFFF; --ink:#16212B; --muted:#5B6873; --line:#D9DFDB;
+  --accent:#1F5FA8; --accent-ink:#FFFFFF; --accent-soft:#E2ECF7;
+  --mustard:#C9921A; --mustard-soft:#F7EDD3;
+  --ok:#3E7A4A; --ok-soft:#E1EFE3; --cold:#2C7FA3; --cold-soft:#DEEFF6;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", Roboto, sans-serif;
+  --r:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F151B; --surface:#18212A; --ink:#E7ECEF; --muted:#97A4AE; --line:#2A3641;
+    --accent:#6EA6E6; --accent-ink:#0B1622; --accent-soft:#1C3047;
+    --mustard:#E4B54A; --mustard-soft:#3A3020;
+    --ok:#7DBB86; --ok-soft:#1F3324; --cold:#6CC0E0; --cold-soft:#173340;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F151B; --surface:#18212A; --ink:#E7ECEF; --muted:#97A4AE; --line:#2A3641;
+  --accent:#6EA6E6; --accent-ink:#0B1622; --accent-soft:#1C3047;
+  --mustard:#E4B54A; --mustard-soft:#3A3020;
+  --ok:#7DBB86; --ok-soft:#1F3324; --cold:#6CC0E0; --cold-soft:#173340;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);
+  padding-top:env(safe-area-inset-top);padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+h1,h2,h3{font-family:var(--display);line-height:1.12;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.9rem;font-weight:800}
+h2{font-size:1.25rem;font-weight:800}
+h3{font-size:1.08rem;font-weight:600}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+button,a,select,.item,.ings li{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+@media (prefers-reduced-motion:no-preference){.btn:active,.chip:active,.stp button:active{transform:scale(.96)}}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--mustard);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+main{max-width:780px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:18px}
+.mut{color:var(--muted)}
+.small{font-size:.86rem}
+
+/* En-tête */
+.hero{display:flex;flex-direction:column;gap:6px;padding-top:6px}
+.hero h1{font-size:1.6rem}
+.kicker{font:700 .78rem/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+
+/* Recherche + filtres */
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:0 28px 2px 0;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}
+.chips::-webkit-scrollbar{display:none}
+.tools{display:flex;align-items:center;gap:8px;margin-top:-6px}
+.tri{font:inherit;font-size:.86rem;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:60vw}
+.chip{flex:none;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.9rem}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* Fiches */
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:600px){.grid{grid-template-columns:1fr 1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden}
+.card-top{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;padding:12px 14px 6px;text-decoration:none;border-left:6px solid hsl(var(--h) 62% 48%)}
+.card-top .no{grid-row:span 2;font:800 1.7rem/1 var(--display);color:hsl(var(--h) 55% 45%);font-variant-numeric:tabular-nums;padding-top:2px}
+.card-top p{margin:0;font-size:.9rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-foot{display:flex;align-items:center;gap:6px;padding:6px 14px 10px;flex-wrap:wrap}
+.card-foot .btn{padding:6px 12px}
+.pill{font-size:.78rem;padding:3px 9px;border-radius:999px;background:var(--bg);color:var(--muted);white-space:nowrap}
+.pill.b{background:var(--mustard-soft);color:var(--ink)}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.btn.ghost{background:transparent}
+a.btn{text-decoration:none}
+.src{display:flex;align-items:flex-start;gap:8px;font-size:.86rem;color:var(--muted);margin:2px 0 0}
+.src .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none;margin-top:.5em}
+.src.ok .dot{background:var(--ok)}
+.src.err{color:var(--ink)}
+.src.err .dot{background:var(--mustard)}
+.src .btn{padding:3px 10px;font-size:.8rem;margin:2px 0 2px 4px;vertical-align:middle}
+.foot{font-size:.88rem;color:var(--muted);text-align:center;padding:4px 10px}
+
+/* Fiche recette */
+.back{display:inline-flex;align-items:center;gap:4px;text-decoration:none;color:var(--accent);font-weight:700}
+.rhead{display:flex;flex-direction:column;gap:8px;border-left:6px solid hsl(var(--h) 62% 48%);padding-left:14px}
+.rhead .no{font:800 1rem/1 var(--display);color:hsl(var(--h) 55% 45%)}
+.rhead p{margin:0;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.facts div{background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.facts b{font:700 1rem/1.2 var(--display)}
+.facts div:last-child{grid-column:span 2}
+@media (min-width:600px){.facts{grid-template-columns:repeat(5,1fr)}.facts div:last-child{grid-column:auto}}
+.facts span{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.ings li{display:grid;grid-template-columns:28px 92px 1fr;gap:8px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.ings li:first-child{border-top:0}
+.ings li[data-act]{cursor:pointer}
+.ings .q{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.ings .nm small{display:block;color:var(--muted);font-size:.84rem}
+.ings li.got .q,.ings li.got .nm{opacity:.4;text-decoration:line-through}
+.box{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);background:var(--surface);padding:0;display:inline-grid;place-items:center;align-self:center}
+.box.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.box.on::after{content:"✓";font-size:14px;font-weight:700;line-height:1}
+.acc{margin:0;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:.92rem}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:10px;counter-increment:s}
+.steps li::before{content:counter(s);font:800 1.35rem/1 var(--display);color:var(--accent);padding-top:2px}
+.steps p{margin:0}
+.tok{display:inline-block;padding:0 7px;border-radius:6px;background:var(--accent-soft);font-weight:700;white-space:nowrap}
+.tmr{margin-top:6px;border:1px dashed var(--accent);color:var(--accent);background:transparent;border-radius:999px;padding:4px 11px;font-size:.86rem;font-weight:700}
+.tip{background:var(--mustard-soft);border-radius:var(--r);padding:14px 16px;font-size:.95rem}
+.tip b{font-family:var(--display)}
+
+/* Stepper */
+.stp{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.stp button{width:38px;height:38px;border:0;background:transparent;font-size:1.25rem;font-weight:700;color:var(--accent);border-radius:999px}
+.stp button:disabled{opacity:.3}
+.stp output{min-width:46px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
+.field label{display:flex;flex-direction:column}
+.field label small{color:var(--muted);font-size:.82rem}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg);border-radius:12px;padding:4px;gap:4px}
+.seg.two{grid-template-columns:repeat(2,1fr)}
+.seg button{border:0;background:transparent;border-radius:9px;padding:8px 6px;font-weight:700;font-size:.92rem;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0 / .12)}
+.sum{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--accent-soft)}
+.sum b{font:800 1.5rem/1 var(--display);font-variant-numeric:tabular-nums}
+
+/* Menu */
+.menu{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.menu li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.menu li:first-child{border-top:0}
+.menu .t{flex:1;min-width:0}
+.menu .t a{font-weight:700;text-decoration:none}
+.menu .t small{display:block;color:var(--muted)}
+.x{border:0;background:transparent;color:var(--muted);font-size:1.2rem;width:32px;height:32px;border-radius:8px}
+.bar{height:8px;border-radius:999px;background:var(--bg);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:999px}
+.bar.over i{background:var(--mustard)}
+.note{font-size:.9rem;padding:10px 12px;border-radius:10px}
+.note.cold{background:var(--cold-soft)}
+.note.warn{background:var(--mustard-soft)}
+
+/* Plan */
+.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.plan li{display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:start}
+.plan .d{font:700 .84rem/1.3 var(--display);color:var(--accent);padding-top:2px}
+.plan small{display:block;color:var(--muted)}
+.eve{display:block;font-size:.84rem;font-weight:700}
+.frz{color:var(--cold);font-size:.84rem;font-weight:700}
+
+/* Liste de courses */
+.ray h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:6px 0 2px}
+.items{list-style:none;margin:0;padding:0}
+.item{display:grid;grid-template-columns:30px 1fr auto;gap:2px 10px;align-items:start;padding:11px 0;border-top:1px solid var(--line)}
+.item[data-act]{cursor:pointer}
+.item .nm{font-weight:700}
+.item .pr{color:var(--muted);font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:2px}
+.item .bq{color:var(--accent);font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+.item .bq.mut{color:var(--muted)}
+.item .sub{grid-column:2 / 4;font-size:.82rem;color:var(--muted);display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.item.done .nm,.item.done .bq,.item.done .pr{opacity:.4;text-decoration:line-through}
+.item.done .sub{opacity:.5}
+.have{border:0;background:var(--bg);border-radius:999px;padding:3px 10px;font-size:.78rem;color:var(--muted);font-weight:700}
+details.stock summary{cursor:pointer;font-weight:700;color:var(--muted);padding:6px 0}
+.empty{padding:22px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--r)}
+
+/* Onglets */
+#tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;padding-bottom:env(safe-area-inset-bottom);z-index:20}
+#tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 10px;text-decoration:none;font-weight:700;font-size:.86rem;color:var(--muted)}
+#tabs a.on{color:var(--accent)}
+#tabs svg{width:22px;height:22px}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:.72rem;margin-left:4px}
+
+/* Minuteurs */
+#timers{position:sticky;top:0;z-index:30;display:flex;flex-direction:column;gap:6px;padding:0 12px}
+#timers:not(:empty){padding:8px 12px;background:var(--bg)}
+.timer{display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--bg);border-radius:12px;padding:8px 12px;max-width:780px;margin:0 auto;width:100%}
+.timer b{font:800 1.3rem/1 var(--display);font-variant-numeric:tabular-nums}
+.timer span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem}
+.timer.done{background:var(--mustard);color:#1a1300;animation:pulse 1s infinite}
+.timer button{border:0;background:transparent;color:inherit;font-size:1.1rem}
+@keyframes pulse{50%{opacity:.75}}
+@media (prefers-reduced-motion:reduce){.timer.done{animation:none}}
+
+/* Mode cuisine */
+#cook{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
+#cook[hidden]{display:none}
+#ck-timers{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+#ck-timers:empty{display:none}
+.ck-top{display:flex;align-items:center;gap:10px}
+.ck-top h2{flex:1;font-size:1.05rem}
+.ck-prog{display:flex;gap:4px;margin:12px 0}
+.ck-prog i{flex:1;height:5px;border-radius:999px;background:var(--line)}
+.ck-prog i.on{background:var(--accent)}
+.ck-body{flex:1;overflow:auto;display:flex;flex-direction:column;gap:16px;max-width:680px;margin:0 auto;width:100%}
+.ck-n{font:800 1rem/1 var(--display);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.ck-t{font-size:1.45rem;line-height:1.45}
+.ck-nav{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;max-width:680px;margin:12px auto 0;width:100%}
+.ck-nav .btn{justify-content:center;padding:14px;font-size:1rem;border-radius:14px}
+details.ck-ing summary{cursor:pointer;font-weight:700;color:var(--accent)}
+
+#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:.92rem;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+textarea.copy{width:100%;min-height:180px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:14px/1.4 var(--body);padding:10px}
+</style>
+</head>
+<body>
+<div id="timers" aria-live="polite"></div>
+<main id="app"></main>
+<nav id="tabs" aria-label="Navigation">
+  <a href="#recettes" id="tab-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6M9 11h6"/></svg>Recettes</a>
+  <a href="#courses" id="tab-c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg><span>Menu &amp; courses<span id="tab-badge"></span></span></a>
+</nav>
+<div id="cook" hidden></div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ================= Données ================= */
+const RAYONS=[["viande","Boucherie & volaille"],["legumes","Fruits & légumes"],["frais","Crèmerie & frais"],["surgeles","Surgelés"],["epicerie","Épicerie"],["epices","Épices & condiments"],["boissons","Vins"],["autre","Autre"]];
+const RAY=Object.fromEntries(RAYONS);
+const UNITS=["g","cl","pc","gousse","cm","botte","boite","cas","cac","selon"];
+
+const CAT_EMBED={
+ epaule_porc:{n:"Épaule de porc en cubes",sh:"porc",r:"viande",u:"g",dlc:3},
+ cuisse_poulet:{n:"Cuisses de poulet entières",s:"Cuisse de poulet entière",sh:"cuisses de poulet",r:"viande",u:"pc",rd:"ceil",dlc:3},
+ haut_cuisse:{n:"Hauts de cuisse de poulet désossés",sh:"poulet",r:"viande",u:"g",dlc:3},
+ paleron:{n:"Paleron ou macreuse de bœuf en cubes",sh:"bœuf",r:"viande",u:"g",dlc:3},
+ boeuf_hache:{n:"Bœuf haché (15 % MG)",sh:"viande hachée",r:"viande",u:"g",dlc:2},
+ dinde:{n:"Sauté de dinde en cubes",sh:"dinde",r:"viande",u:"g",dlc:3},
+ saucisse:{n:"Saucisses fumées (Montbéliard) ou de Toulouse",s:"Saucisse fumée ou de Toulouse",sh:"saucisses",r:"viande",u:"pc",rd:"ceil",dlc:6},
+ lardons:{n:"Lardons fumés",sh:"lardons",r:"frais",u:"g",a:{t:200,l:"barquette de 200 g"}},
+ oignon:{n:"Oignons jaunes",s:"Oignon jaune",sh:"oignons",r:"legumes",u:"pc",rd:"half"},
+ ail:{n:"Ail",sh:"ail",r:"legumes",u:"gousse",rd:"ceil",a:{t:10,l:"tête d'ail (~10 gousses)"}},
+ gingembre:{n:"Gingembre frais",sh:"gingembre",r:"legumes",u:"cm",rd:"ceil",a:{t:10,l:"racine (~10 cm)"}},
+ poivron:{n:"Poivrons (rouges et verts)",s:"Poivron",sh:"poivrons",r:"legumes",u:"pc",rd:"half"},
+ carotte:{n:"Carottes",s:"Carotte",sh:"carottes",r:"legumes",u:"pc",rd:"ceil"},
+ poireau:{n:"Poireaux",s:"Poireau",sh:"poireaux",r:"legumes",u:"pc",rd:"ceil"},
+ citron:{n:"Citrons",s:"Citron",sh:"citron",r:"legumes",u:"pc",rd:"half"},
+ persil:{n:"Persil plat",sh:"persil",r:"legumes",u:"botte",rd:"half",a:{t:1,l:"botte"}},
+ tomates:{n:"Tomates concassées en boîte",sh:"tomates",r:"epicerie",u:"g",a:{t:400,l:"boîte de 400 g"}},
+ passata:{n:"Coulis de tomate (passata)",sh:"coulis",r:"epicerie",u:"g",a:{t:700,l:"bouteille de 700 g"}},
+ haricots:{n:"Haricots rouges en boîte (400 g)",sh:"haricots rouges",r:"epicerie",u:"boite",rd:"round",a:{t:1,l:"boîte de 400 g"}},
+ coco:{n:"Lait de coco",sh:"lait de coco",r:"epicerie",u:"cl",a:{t:40,l:"boîte de 40 cl"}},
+ lentilles:{n:"Lentilles corail",sh:"lentilles corail",r:"epicerie",u:"g",a:{t:500,l:"sachet de 500 g"}},
+ bouillon:{n:"Bouillon (cube + eau chaude)",sh:"bouillon",r:"epicerie",u:"cl",a:{t:50,l:"cube (pour 50 cl)"}},
+ farine:{n:"Farine",sh:"farine",r:"epicerie",u:"g",a:{t:1000,l:"paquet de 1 kg"}},
+ chapelure:{n:"Chapelure",sh:"chapelure",r:"epicerie",u:"g",a:{t:250,l:"paquet de 250 g"}},
+ riz:{n:"Riz long ou basmati",sh:"riz",r:"epicerie",u:"g",a:{t:1000,l:"paquet de 1 kg"}},
+ pates:{n:"Pâtes",sh:"pâtes",r:"epicerie",u:"g",a:{t:500,l:"paquet de 500 g"}},
+ huile:{n:"Huile neutre (tournesol, colza)",sh:"huile",r:"epices",u:"cas"},
+ sel:{n:"Sel, poivre",sh:"sel, poivre",r:"epices",u:"selon"},
+ moutarde:{n:"Moutarde forte",sh:"moutarde",r:"epices",u:"cas"},
+ espelette:{n:"Piment d'Espelette",sh:"piment d'Espelette",r:"epices",u:"cac"},
+ cumin:{n:"Cumin moulu",sh:"cumin",r:"epices",u:"cac"},
+ paprika:{n:"Paprika",sh:"paprika",r:"epices",u:"cac"},
+ piment:{n:"Piment en poudre ou flocons",sh:"piment",r:"epices",u:"cac"},
+ curcuma:{n:"Curcuma",sh:"curcuma",r:"epices",u:"cac"},
+ curry:{n:"Curry en poudre",sh:"curry",r:"epices",u:"cac"},
+ basilic:{n:"Basilic séché",sh:"basilic",r:"epices",u:"cac"},
+ bouquet:{n:"Bouquet garni",s:"Bouquet garni",sh:"bouquet garni",r:"epices",u:"pc",rd:"ceil"},
+ creme:{n:"Crème fraîche entière",sh:"crème",r:"frais",u:"cl",a:{t:20,l:"pot ou brique de 20 cl"}},
+ beurre:{n:"Beurre",sh:"beurre",r:"frais",u:"g",a:{t:250,l:"plaquette de 250 g"}},
+ oeuf:{n:"Œufs",s:"Œuf",sh:"œufs",r:"frais",u:"pc",rd:"ceil",a:{t:6,l:"boîte de 6"}},
+ vin_rouge:{n:"Vin rouge corsé (côtes-du-rhône…)",sh:"vin rouge",r:"boissons",u:"cl",a:{t:75,l:"bouteille de 75 cl"}},
+ vin_blanc:{n:"Vin blanc sec",sh:"vin blanc",r:"boissons",u:"cl",a:{t:75,l:"bouteille de 75 cl"}},
+ eau:{n:"Eau",sh:"eau",r:"autre",u:"cl",nb:true},
+ haricots_rouges_secs:{n:"Haricots rouges secs",sh:"haricots rouges",r:"epicerie",u:"g",a:{t:500,l:"sachet de 500 g"}}
+};
+const PRIX_EMBED={epaule_porc:8.82,cuisse_poulet:1.2,haut_cuisse:8.99,paleron:10.99,boeuf_hache:11,dinde:9.99,saucisse:0.85,lardons:1.57,oignon:0.2,ail:0.5,gingembre:0.7,poivron:0.6,carotte:0.1,poireau:0.7,citron:0.4,persil:0.89,tomates:0.65,passata:0.89,haricots:0.69,coco:1.39,lentilles:1.49,bouillon:0.1,farine:0.55,chapelure:0.89,riz:1.57,pates:0.55,creme:0.79,beurre:2.15,oeuf:1.65,vin_rouge:2.99,vin_blanc:2.49,haricots_rouges_secs:1.59};
+Object.entries(PRIX_EMBED).forEach(([k,v])=>{ if(CAT_EMBED[k]) CAT_EMBED[k].p=v; });
+Object.assign(CAT_EMBED,{"courgette":{"n":"Courgettes","s":"Courgette","sh":"courgettes","r":"legumes","u":"pc","rd":"half","p":0.6},"haricots_blancs_secs": {"n": "Haricots blancs secs (cocos ou lingots)", "sh": "haricots blancs", "r": "epicerie", "u": "g", "a": {"t": 500, "l": "sachet de 500 g"}, "p": 1.59}, "haricots_noirs_secs": {"n": "Haricots noirs secs", "sh": "haricots noirs", "r": "epicerie", "u": "g", "a": {"t": 500, "l": "sachet de 500 g"}, "p": 2.49}, "lentilles_vertes": {"n": "Lentilles vertes", "sh": "lentilles vertes", "r": "epicerie", "u": "g", "a": {"t": 500, "l": "sachet de 500 g"}, "p": 1.63}, "saucisse_toulouse": {"n": "Saucisses de Toulouse", "sh": "saucisses de Toulouse", "r": "viande", "u": "pc", "s": "Saucisse de Toulouse", "rd": "ceil", "dlc": 3, "p": 0.7}, "chorizo": {"n": "Chorizo fort", "sh": "chorizo", "r": "frais", "u": "g", "a": {"t": 200, "l": "pièce de 200 g"}, "p": 2.29}, "echine_porc": {"n": "Échine de porc sans os en cubes", "sh": "porc", "r": "viande", "u": "g", "dlc": 3, "p": 6.99}, "joue_porc": {"n": "Joues de porc", "sh": "joues de porc", "r": "viande", "u": "g", "s": "Joue de porc", "dlc": 2, "p": 9.99}, "filet_poulet": {"n": "Filets de poulet", "sh": "poulet", "r": "viande", "u": "g", "dlc": 2, "p": 8.99}, "jambon_des": {"n": "Dés de jambon", "sh": "dés de jambon", "r": "frais", "u": "g", "a": {"t": 150, "l": "barquette de 150 g"}, "p": 1.59}, "thon": {"n": "Thon au naturel en boîte", "sh": "thon", "r": "epicerie", "u": "g", "a": {"t": 140, "l": "boîte de 140 g"}, "p": 1.39}, "reblochon": {"n": "Reblochon", "sh": "reblochon", "r": "frais", "u": "g", "a": {"t": 450, "l": "pièce de 450 g"}, "p": 4.99}, "fromage_ail": {"n": "Fromage frais ail et fines herbes (type Boursin)", "sh": "fromage ail et fines herbes", "r": "frais", "u": "g", "a": {"t": 150, "l": "boîte de 150 g"}, "p": 0.99}, "epinards": {"n": "Épinards hachés surgelés", "sh": "épinards", "r": "surgeles", "u": "g", "a": {"t": 1000, "l": "sachet de 1 kg"}, "p": 1.99}, "petits_pois": {"n": "Petits pois surgelés", "sh": "petits pois", "r": "surgeles", "u": "g", "a": {"t": 1000, "l": "sachet de 1 kg"}, "p": 1.79}, "colin": {"n": "Filets de colin surgelés", "sh": "colin", "r": "surgeles", "u": "g", "a": {"t": 1000, "l": "sachet de 1 kg"}, "p": 6.99}, "gnocchis": {"n": "Gnocchis frais", "sh": "gnocchis", "r": "frais", "u": "g", "a": {"t": 380, "l": "sachet de 380 g"}, "p": 1.09}, "yaourt": {"n": "Yaourt nature", "sh": "yaourt", "r": "frais", "u": "g", "a": {"t": 500, "l": "pack de 4 x 125 g"}, "p": 0.89}, "beurre_cacahuete": {"n": "Beurre de cacahuète", "sh": "beurre de cacahuète", "r": "epicerie", "u": "g", "a": {"t": 350, "l": "pot de 350 g"}, "p": 2.29}, "concentre_tomate": {"n": "Concentré de tomate", "sh": "concentré de tomate", "r": "epicerie", "u": "g", "a": {"t": 140, "l": "boîte de 140 g"}, "p": 0.69}, "sauce_soja": {"n": "Sauce soja", "sh": "sauce soja", "r": "epicerie", "u": "cl", "a": {"t": 25, "l": "bouteille de 25 cl"}, "p": 1.49}, "sucre": {"n": "Sucre en poudre", "sh": "sucre", "r": "epicerie", "u": "g", "a": {"t": 1000, "l": "paquet de 1 kg"}, "p": 1.05}, "miel": {"n": "Miel", "sh": "miel", "r": "epices", "u": "cas"}, "cajun": {"n": "Épices cajun", "sh": "épices cajun", "r": "epices", "u": "cac"}, "garam_masala": {"n": "Garam masala", "sh": "garam masala", "r": "epices", "u": "cac"}, "ras_el_hanout": {"n": "Ras el hanout", "sh": "ras el hanout", "r": "epices", "u": "cac"}, "thym": {"n": "Thym séché", "sh": "thym", "r": "epices", "u": "cac"}, "laurier": {"n": "Laurier (feuilles)", "sh": "laurier", "r": "epices", "u": "pc", "s": "Feuille de laurier", "rd": "ceil"}});
+Object.assign(CAT_EMBED,{"concombre": {"n": "Concombres", "sh": "concombre", "r": "legumes", "u": "pc", "s": "Concombre", "rd": "half", "p": 0.79}, "germes_soja": {"n": "Germes de soja frais", "sh": "germes de soja", "r": "legumes", "u": "g", "a": {"t": 300, "l": "barquette de 300 g"}, "p": 1.29}, "epinards_branches": {"n": "Épinards en branches surgelés", "sh": "épinards", "r": "surgeles", "u": "g", "a": {"t": 1000, "l": "sachet de 1 kg"}, "p": 1.99}, "pdt": {"n": "Pommes de terre", "sh": "pommes de terre", "r": "legumes", "u": "g", "a": {"t": 2500, "l": "filet de 2,5 kg"}, "p": 2.49}, "ciboule": {"n": "Ciboule (oignons nouveaux)", "sh": "ciboule", "r": "legumes", "u": "botte", "rd": "half", "a": {"t": 1, "l": "botte"}, "p": 0.99}, "aubergine": {"n": "Aubergines", "sh": "aubergines", "r": "legumes", "u": "pc", "s": "Aubergine", "rd": "half", "p": 0.99}, "coriandre": {"n": "Coriandre fraîche", "sh": "coriandre", "r": "legumes", "u": "botte", "rd": "half", "a": {"t": 1, "l": "botte"}, "p": 0.99}, "citron_vert": {"n": "Citrons verts", "sh": "citron vert", "r": "legumes", "u": "pc", "s": "Citron vert", "rd": "half", "p": 0.35}, "citronnelle": {"n": "Citronnelle (tiges)", "sh": "citronnelle", "r": "legumes", "u": "pc", "s": "Tige de citronnelle", "rd": "ceil", "p": 0.5}, "tofu": {"n": "Tofu ferme nature", "sh": "tofu", "r": "frais", "u": "g", "a": {"t": 400, "l": "bloc de 400 g"}, "p": 1.79}, "porc_hache": {"n": "Porc haché (ou chair à saucisse)", "sh": "porc haché", "r": "viande", "u": "g", "dlc": 2, "p": 7.49}, "boeuf_emince": {"n": "Bœuf à sauter en lanières", "sh": "bœuf", "r": "viande", "u": "g", "dlc": 2, "p": 14.99}, "ananas": {"n": "Ananas en morceaux (boîte)", "sh": "ananas", "r": "epicerie", "u": "g", "a": {"t": 565, "l": "boîte de 565 g"}, "p": 1.19}, "cacahuetes": {"n": "Cacahuètes grillées", "sh": "cacahuètes", "r": "epicerie", "u": "g", "a": {"t": 200, "l": "sachet de 200 g"}, "p": 0.76}, "nouilles_ble": {"n": "Nouilles chinoises aux œufs", "sh": "nouilles", "r": "epicerie", "u": "g", "a": {"t": 250, "l": "paquet de 250 g"}, "p": 1.29}, "nouilles_riz": {"n": "Nouilles de riz plates", "sh": "nouilles de riz", "r": "epicerie", "u": "g", "a": {"t": 400, "l": "paquet de 400 g"}, "p": 1.59}, "miso": {"n": "Pâte miso", "sh": "miso", "r": "epicerie", "u": "g", "a": {"t": 300, "l": "pot de 300 g"}, "p": 3.49}, "pate_curry_vert": {"n": "Pâte de curry vert thaï", "sh": "pâte de curry vert", "r": "epicerie", "u": "g", "a": {"t": 110, "l": "pot de 110 g"}, "p": 1.79}, "vinaigre_riz": {"n": "Vinaigre de riz", "sh": "vinaigre de riz", "r": "epices", "u": "cas"}, "vinaigre": {"n": "Vinaigre blanc ou de cidre", "sh": "vinaigre", "r": "epices", "u": "cas"}, "huile_sesame": {"n": "Huile de sésame", "sh": "huile de sésame", "r": "epices", "u": "cas"}, "graines_sesame": {"n": "Graines de sésame", "sh": "sésame", "r": "epices", "u": "cac"}, "fecule_mais": {"n": "Fécule de maïs (type Maïzena)", "sh": "fécule de maïs", "r": "epices", "u": "cas"}, "sauce_poisson": {"n": "Sauce poisson (nuoc-mâm)", "sh": "sauce poisson", "r": "epices", "u": "cas"}, "coriandre_moulue": {"n": "Coriandre moulue", "sh": "coriandre moulue", "r": "epices", "u": "cac"}, "anis_etoile": {"n": "Anis étoilé (badiane)", "sh": "anis étoilé", "r": "epices", "u": "pc", "s": "Étoile de badiane", "rd": "ceil"}, "cannelle": {"n": "Cannelle en bâton", "sh": "cannelle", "r": "epices", "u": "pc", "s": "Bâton de cannelle", "rd": "ceil"}});
+let CAT=CAT_EMBED;
+const ACC={riz:{k:"riz",g:70,l:"Riz",txt:"70 g cru par adulte"},pates:{k:"pates",g:80,l:"Pâtes",txt:"80 g crues par adulte"}};
+
+const I=(k,q,no)=>({k,q,no});
+const BASE=[
+{id:"porc-moutarde",titre:"Sauté de porc à la moutarde",desc:"Épaule fondante, sauce crème-moutarde qui nappe le riz.",base:6,prep:15,cuisson:60,budget:1,frigo:3,congel:"Oui",tags:["porc"],acc:"riz",fr:2,hue:38,
+ ings:[I("epaule_porc",900),I("oignon",3,"émincés"),I("bouillon",30),I("creme",30),I("moutarde",3),I("huile",2),I("sel")],
+ etapes:[
+  {t:"Émince {oignon}. Si l'épaule n'est pas déjà en cubes, taille-la en morceaux de 3 à 4 cm."},
+  {t:"Chauffe {huile} dans une cocotte à feu vif. Dore {epaule_porc} en 2 fournées pour qu'elle colore au lieu de bouillir, environ 5 min par fournée. Réserve.",min:10},
+  {t:"Baisse à feu moyen et fais fondre les oignons en grattant les sucs au fond.",min:5},
+  {t:"Remets la viande, verse {bouillon}, sale et poivre. Couvre et laisse mijoter à feu doux.",min:50},
+  {t:"Découvre, ajoute {creme} et {moutarde}. Laisse réduire jusqu'à ce que la sauce nappe la cuillère.",min:5}],
+ astuce:"Mets la moutarde à la fin : si elle cuit trop longtemps, elle perd son piquant."},
+{id:"poulet-basquaise",titre:"Poulet basquaise",desc:"Cuisses mijotées dans une compotée de poivrons et tomates.",base:6,prep:20,cuisson:55,budget:1,frigo:3,congel:"Oui",tags:["volaille"],acc:"riz",fr:1,hue:8,
+ ings:[I("cuisse_poulet",6),I("poivron",4,"en lanières"),I("oignon",2,"émincés"),I("ail",3),I("tomates",800),I("espelette",1),I("huile",2),I("sel")],
+ etapes:[
+  {t:"Émince {oignon}, coupe {poivron} en lanières en retirant les graines, écrase {ail}."},
+  {t:"Chauffe {huile} dans une cocotte. Dore {cuisse_poulet} côté peau 8 min, puis 3 min de l'autre côté. Réserve et retire une partie du gras si besoin.",min:11},
+  {t:"Fais revenir oignons et poivrons à feu moyen en remuant.",min:10},
+  {t:"Ajoute l'ail, {tomates} et {espelette}, sale. Mélange 2 min."},
+  {t:"Remets les cuisses peau vers le haut, couvre et laisse mijoter à feu doux.",min:40},
+  {t:"Goûte et rectifie. Si la sauce est trop liquide, laisse 10 min à découvert."}],
+ astuce:"Les cuisses entières coûtent environ deux fois moins cher que les filets et restent moelleuses."},
+{id:"boeuf-bourguignon",titre:"Bœuf bourguignon",desc:"Le classique du dimanche, sans champignons, encore meilleur le lendemain.",base:6,prep:20,cuisson:180,budget:2,frigo:4,congel:"Oui, très bien",tags:["boeuf"],acc:"pates",fr:2,hue:350,
+ ings:[I("paleron",1500),I("lardons",200),I("oignon",3,"émincés"),I("carotte",5,"en rondelles"),I("ail",2),I("farine",20,"≈ 2 c. à s."),I("vin_rouge",75),I("bouillon",25),I("bouquet",1),I("huile",2),I("sel")],
+ etapes:[
+  {t:"Coupe {carotte} en rondelles, émince {oignon}, écrase {ail}. Éponge {paleron} avec du papier absorbant : la viande sèche dore mieux."},
+  {t:"Dans la cocotte à feu moyen, fais revenir {lardons} sans matière grasse. Réserve.",min:5},
+  {t:"Ajoute {huile} et dore la viande en 3 fournées, 4 à 5 min chacune. Réserve.",min:15},
+  {t:"Fais revenir oignons et carottes dans la même cocotte.",min:5},
+  {t:"Remets viande et lardons, saupoudre {farine} et mélange 2 min pour la cuire."},
+  {t:"Verse {vin_rouge} et {bouillon}, ajoute l'ail et {bouquet}. Le liquide doit presque couvrir. Porte à frémissement en grattant le fond."},
+  {t:"Couvre et laisse cuire à feu très doux, en remuant toutes les 45 min. La viande doit se défaire à la fourchette.",min:150},
+  {t:"Retire le bouquet garni et rectifie l'assaisonnement. Trop liquide : 15 min à découvert."}],
+ astuce:"Fais-le la veille : il gagne en goût au repos, et la graisse figée en surface s'enlève à la cuillère."},
+{id:"chili-con-carne",titre:"Chili con carne",desc:"Bœuf haché, haricots rouges secs, cumin : costaud. Trempage des haricots la veille.",base:6,prep:15,cuisson:105,budget:1,frigo:3,congel:"Oui",tags:["boeuf"],acc:"riz",fr:1,hue:18,
+ ings:[I("boeuf_hache",750),I("oignon",2,"en dés"),I("poivron",2,"en dés"),I("ail",3),I("tomates",800),I("haricots_rouges_secs",200,"trempés la veille (= 2 boîtes de 400 g)"),I("cumin",3),I("paprika",1.5),I("piment",0.5,"selon ton goût"),I("huile",2),I("sel"),I("eau",50)],
+ etapes:[
+  {t:"La veille, mets {haricots_rouges_secs} à tremper dans 3 fois leur volume d'eau froide."},
+  {t:"Le jour même, égoutte et rince les haricots, couvre-les d'eau froide sans sel et fais-les bouillir à gros bouillons 10 min. Cette ébullition vive est indispensable pour les haricots rouges. Égoutte.",min:10},
+  {t:"Pendant ce temps, coupe {oignon} et {poivron} en dés, écrase {ail}. Chauffe {huile} dans une cocotte et fais revenir oignons et poivrons.",min:6},
+  {t:"Monte le feu, ajoute {boeuf_hache} et émiette-le jusqu'à ce qu'il colore.",min:5},
+  {t:"Ajoute l'ail, {cumin}, {paprika} et {piment}. Remue 1 min pour réveiller les épices."},
+  {t:"Ajoute les haricots égouttés, {tomates} et {eau}. Couvre et laisse mijoter à feu doux en remuant de temps en temps, jusqu'à ce que les haricots soient fondants.",min:75},
+  {t:"Sale seulement maintenant (le sel en début de cuisson durcit les haricots). Si la sauce est trop liquide, laisse épaissir à découvert.",min:10}],
+ astuce:"Un carré de chocolat noir ou 1 c. à c. de cacao en fin de cuisson donne de la profondeur à la sauce."},
+{id:"curry-poulet-coco",titre:"Curry de poulet au lait de coco",desc:"Doux, parfumé, prêt en moins d'une heure.",base:6,prep:15,cuisson:35,budget:1,frigo:3,congel:"Oui",tags:["volaille","rapide"],acc:"riz",fr:1,hue:44,
+ ings:[I("haut_cuisse",900,"en morceaux de 3 cm"),I("oignon",2,"émincés"),I("ail",3),I("gingembre",3,"râpé"),I("curry",9,"≈ 3 c. à s."),I("tomates",400),I("coco",80),I("huile",2),I("citron",0.5,"facultatif"),I("sel")],
+ etapes:[
+  {t:"Coupe {haut_cuisse} en morceaux de 3 cm, émince {oignon}, râpe {ail} et {gingembre}."},
+  {t:"Chauffe {huile} à feu moyen et fais fondre les oignons.",min:5},
+  {t:"Ajoute l'ail, le gingembre et {curry}. Remue 1 min sans laisser brûler."},
+  {t:"Ajoute le poulet et enrobe-le d'épices.",min:5},
+  {t:"Verse {tomates} et {coco}, sale. Laisse mijoter à découvert à feu doux.",min:25},
+  {t:"Rectifie l'assaisonnement et ajoute un filet de {citron} pour réveiller la sauce."}],
+ astuce:"Les hauts de cuisse ne sèchent pas comme le blanc, même réchauffés le lendemain."},
+{id:"blanquette-dinde",titre:"Blanquette de dinde",desc:"La blanquette de grand-mère, version dinde et petit budget.",base:6,prep:20,cuisson:60,budget:1,frigo:3,congel:"Possible, la sauce peut trancher",tags:["volaille"],acc:"riz",fr:1,hue:200,
+ ings:[I("dinde",1200),I("carotte",5,"en rondelles épaisses"),I("oignon",2,"en quartiers"),I("bouquet",1),I("bouillon",150),I("beurre",45),I("farine",45),I("creme",30),I("oeuf",2,"jaunes seulement"),I("citron",1,"le jus"),I("sel")],
+ etapes:[
+  {t:"Coupe {carotte} en rondelles épaisses et {oignon} en quartiers."},
+  {t:"Dans la cocotte, mets {dinde}, les carottes, les oignons, {bouquet} et {bouillon} froid. Porte à frémissement et écume la mousse grise.",min:5},
+  {t:"Laisse frémir doucement à couvert.",min:40},
+  {t:"Égoutte viande et carottes et garde-les au chaud. Filtre le bouillon et garde-le."},
+  {t:"Prépare le roux : fais fondre {beurre}, ajoute {farine} et fouette sans colorer.",min:2},
+  {t:"Verse petit à petit la moitié du bouillon en fouettant, jusqu'à obtenir une sauce qui nappe.",min:8},
+  {t:"Dans un bol, mélange {creme}, les jaunes de {oeuf} et le jus de {citron}. Hors du feu, verse-le dans la sauce en fouettant. Ne fais plus bouillir."},
+  {t:"Remets viande et carottes et réchauffe doucement.",min:5}],
+ astuce:"Réchauffe-la à feu doux sans jamais bouillir, sinon les jaunes d'œuf tranchent la sauce."},
+{id:"boulettes-tomate",titre:"Boulettes sauce tomate",desc:"Boulettes de bœuf mijotées dans le coulis, avec des pâtes.",base:6,prep:25,cuisson:35,budget:1,frigo:3,congel:"Oui",tags:["boeuf"],acc:"pates",fr:1,hue:0,
+ ings:[I("boeuf_hache",750),I("oeuf",2),I("chapelure",75),I("ail",2),I("persil",0.5,"haché"),I("oignon",2,"émincés"),I("passata",1000),I("basilic",1),I("huile",3),I("sel")],
+ etapes:[
+  {t:"Hache {persil} et {ail}. Mélange à la main {boeuf_hache}, {oeuf}, {chapelure}, l'ail, le persil, sel et poivre, sans trop pétrir."},
+  {t:"Forme une trentaine de boulettes de la taille d'une noix, les mains mouillées."},
+  {t:"Chauffe {huile} dans une sauteuse et dore les boulettes en les roulant. Réserve.",min:8},
+  {t:"Dans la même sauteuse, fais revenir {oignon} émincés.",min:5},
+  {t:"Ajoute {passata} et {basilic}, sale. Au frémissement, remets les boulettes, couvre et laisse mijoter à feu doux.",min:25}],
+ astuce:"Version air fryer pour l'étape 3 : 10 min à 200 °C, sans projections et avec moins d'huile."},
+{id:"rougail-saucisses",titre:"Rougail saucisses",desc:"Le plat réunionnais : saucisses, tomate, gingembre, curcuma.",base:6,prep:15,cuisson:45,budget:1,frigo:4,congel:"Oui",tags:["porc"],acc:"riz",fr:3,hue:28,
+ ings:[I("saucisse",9),I("oignon",3,"émincés"),I("ail",4),I("gingembre",3,"râpé"),I("curcuma",1.5),I("piment",0.5,"selon ton goût"),I("tomates",800),I("huile",1),I("sel")],
+ etapes:[
+  {t:"Coupe {saucisse} en rondelles de 1 cm, émince {oignon}, râpe {ail} et {gingembre}."},
+  {t:"Chauffe {huile} dans une cocotte et dore les rondelles. Retire l'excès de gras.",min:8},
+  {t:"Ajoute les oignons et fais-les fondre.",min:5},
+  {t:"Ajoute l'ail, le gingembre, {curcuma} et {piment}. Remue 1 min."},
+  {t:"Verse {tomates}, couvre et laisse mijoter.",min:15},
+  {t:"Découvre et laisse réduire jusqu'à obtenir une sauce épaisse. Goûte avant de saler : les saucisses le sont déjà.",min:15}],
+ astuce:"Les saucisses fumées se gardent plus longtemps au frigo que la viande fraîche : c'est le plat à placer en fin de semaine."},
+{id:"poulet-poireaux",titre:"Poulet crème-poireaux",desc:"Fondue de poireaux, crème et pointe de moutarde.",base:6,prep:15,cuisson:35,budget:1,frigo:3,congel:"Possible",tags:["volaille","rapide"],acc:"riz",fr:1,hue:95,
+ ings:[I("haut_cuisse",900,"en morceaux"),I("poireau",4,"en rondelles fines"),I("beurre",15),I("vin_blanc",15,"ou du bouillon"),I("creme",30),I("moutarde",1),I("huile",1),I("sel")],
+ etapes:[
+  {t:"Fends {poireau} en deux et rince-les sous l'eau, la terre se cache entre les feuilles. Coupe le blanc et le vert tendre en rondelles fines. Coupe {haut_cuisse} en morceaux."},
+  {t:"Chauffe {huile} dans une sauteuse à feu vif et dore le poulet. Réserve.",min:6},
+  {t:"Ajoute {beurre} et les poireaux avec une pincée de sel. Couvre et laisse fondre à feu moyen en remuant.",min:12},
+  {t:"Verse {vin_blanc} et laisse évaporer.",min:2},
+  {t:"Ajoute {creme}, {moutarde} et le poulet. Couvre et laisse mijoter à feu doux.",min:15}],
+ astuce:"Garde le vert foncé des poireaux pour un bouillon ou une soupe : rien ne se perd."},
+{id:"dahl-lentilles",titre:"Dahl de lentilles corail",desc:"Végétarien, crémeux, le moins cher du livre.",base:6,prep:10,cuisson:30,budget:1,frigo:4,congel:"Oui",tags:["vege","rapide"],acc:"riz",fr:4,hue:30,
+ ings:[I("lentilles",400,"rincées"),I("oignon",2,"émincés"),I("ail",3),I("gingembre",3,"râpé"),I("curry",3,"ou garam masala"),I("curcuma",1),I("tomates",400),I("coco",40),I("eau",80),I("huile",2),I("citron",0.5),I("sel")],
+ etapes:[
+  {t:"Rince {lentilles} jusqu'à ce que l'eau soit claire. Émince {oignon}, râpe {ail} et {gingembre}."},
+  {t:"Chauffe {huile} et fais fondre les oignons.",min:5},
+  {t:"Ajoute l'ail, le gingembre, {curry} et {curcuma}. Remue 1 min."},
+  {t:"Ajoute les lentilles, {tomates}, {coco} et {eau}. Au frémissement, laisse cuire à découvert en remuant souvent, car ça attache.",min:25},
+  {t:"Sale et ajoute le jus de {citron}. Si c'est trop épais, détends avec un peu d'eau."}],
+ astuce:"Il épaissit au frigo : ajoute un fond d'eau en le réchauffant."}
+];
+
+BASE.push(...[{"id": "cassoulet-express", "titre": "Cassoulet express à la cocotte", "desc": "Haricots blancs, saucisses de Toulouse et lardons, sans four. Trempage la veille.", "base": 6, "prep": 20, "cuisson": 110, "budget": 1, "frigo": 4, "congel": "Oui, très bien", "tags": ["porc", "legumineuses"], "acc": null, "fr": 2, "hue": 24, "astuce": "Le sel ne s'ajoute qu'en fin de cuisson : mis au début, il durcit la peau des haricots.", "ings": [{"k": "haricots_blancs_secs", "q": 500, "no": "trempés la veille"}, {"k": "saucisse_toulouse", "q": 6, "no": ""}, {"k": "lardons", "q": 200, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "carotte", "q": 2, "no": "en rondelles"}, {"k": "ail", "q": 4, "no": ""}, {"k": "concentre_tomate", "q": 70, "no": ""}, {"k": "bouillon", "q": 150, "no": ""}, {"k": "thym", "q": 1, "no": ""}, {"k": "laurier", "q": 2, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_blancs_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots. Mets-les dans une casserole d'eau froide sans sel, porte à ébullition 5 min, puis égoutte.", "min": 10}, {"t": "Dans la cocotte, dore {saucisse_toulouse} entières dans {huile}, puis réserve-les. Fais revenir {lardons}, {oignon} et {carotte}.", "min": 10}, {"t": "Ajoute {ail} écrasé, {concentre_tomate}, {thym} et {laurier}. Remue 1 min."}, {"t": "Ajoute les haricots et {bouillon}. Porte à frémissement, couvre et laisse cuire doucement.", "min": 60}, {"t": "Coupe les saucisses en tronçons, remets-les dans la cocotte et poursuis la cuisson jusqu'à ce que les haricots soient fondants. Sale à la fin.", "min": 30}]}, {"id": "haricots-rouges-creole", "titre": "Haricots rouges à la créole", "desc": "Haricots rouges mijotés avec saucisse fumée, poivron et thym. Trempage la veille.", "base": 6, "prep": 15, "cuisson": 100, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["porc", "legumineuses"], "acc": "riz", "fr": 3, "hue": 4, "astuce": "Écraser quelques haricots en fin de cuisson donne une sauce crémeuse sans rien ajouter.", "ings": [{"k": "haricots_rouges_secs", "q": 500, "no": "trempés la veille"}, {"k": "saucisse", "q": 6, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "poivron", "q": 2, "no": "en dés"}, {"k": "ail", "q": 4, "no": ""}, {"k": "tomates", "q": 400, "no": ""}, {"k": "thym", "q": 1, "no": ""}, {"k": "laurier", "q": 2, "no": ""}, {"k": "piment", "q": 0.5, "no": "selon ton goût"}, {"k": "bouillon", "q": 120, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_rouges_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots, couvre-les d'eau froide sans sel et fais-les bouillir à gros bouillons 10 min. Cette ébullition vive est indispensable pour les haricots rouges. Égoutte.", "min": 10}, {"t": "Coupe {saucisse} en rondelles et dore-les dans {huile} au fond de la cocotte. Ajoute {oignon}, {poivron} et {ail} écrasé.", "min": 8}, {"t": "Ajoute les haricots, {tomates}, {thym}, {laurier}, {piment} et {bouillon}. Couvre et laisse mijoter à feu doux.", "min": 75}, {"t": "Écrase une louche de haricots contre la paroi pour lier la sauce, goûte et sale si besoin.", "min": 5}]}, {"id": "feijoada", "titre": "Feijoada simplifiée", "desc": "Haricots noirs, saucisse fumée et échine de porc à la brésilienne. Trempage la veille.", "base": 6, "prep": 20, "cuisson": 110, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["porc", "legumineuses"], "acc": "riz", "fr": 3, "hue": 280, "astuce": "Au Brésil, on la sert avec du riz et des quartiers d'orange : l'acidité équilibre le plat.", "ings": [{"k": "haricots_noirs_secs", "q": 500, "no": "trempés la veille"}, {"k": "echine_porc", "q": 600, "no": ""}, {"k": "saucisse", "q": 4, "no": ""}, {"k": "lardons", "q": 150, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 4, "no": ""}, {"k": "laurier", "q": 3, "no": ""}, {"k": "bouillon", "q": 150, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_noirs_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots, couvre-les d'eau froide sans sel et fais-les bouillir à gros bouillons 10 min. Égoutte.", "min": 10}, {"t": "Dans la cocotte, dore {echine_porc} dans {huile} avec {lardons}.", "min": 8}, {"t": "Ajoute {oignon} et {ail} écrasé, puis laisse fondre.", "min": 4}, {"t": "Ajoute les haricots, {laurier} et {bouillon}. Couvre et laisse mijoter à feu doux.", "min": 60}, {"t": "Ajoute {saucisse} en rondelles et poursuis jusqu'à ce que les haricots soient fondants et la sauce épaisse. Sale à la fin.", "min": 30}]}, {"id": "haricots-chorizo", "titre": "Ragoût de haricots blancs au chorizo", "desc": "Haricots cocos fondants, chorizo, poivron et paprika à l'espagnole. Trempage la veille.", "base": 6, "prep": 15, "cuisson": 90, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["porc", "legumineuses"], "acc": null, "fr": 3, "hue": 12, "astuce": "Pas besoin d'huile : le gras du chorizo sert de base à toute la sauce.", "ings": [{"k": "haricots_blancs_secs", "q": 450, "no": "trempés la veille"}, {"k": "chorizo", "q": 200, "no": "en rondelles"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "poivron", "q": 2, "no": "en lanières"}, {"k": "ail", "q": 3, "no": ""}, {"k": "paprika", "q": 2, "no": ""}, {"k": "tomates", "q": 400, "no": ""}, {"k": "bouillon", "q": 120, "no": ""}, {"k": "laurier", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_blancs_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots. Porte-les à ébullition 5 min dans de l'eau froide sans sel, puis égoutte.", "min": 10}, {"t": "Fais revenir {chorizo} à sec dans la cocotte : il rend son huile rouge. Ajoute {oignon}, {poivron} et {ail} écrasé.", "min": 8}, {"t": "Ajoute {paprika}, remue 30 secondes, puis {tomates}, les haricots, {laurier} et {bouillon}.", "min": 2}, {"t": "Couvre et laisse mijoter à feu doux jusqu'à ce que les haricots soient fondants. Sale à la fin.", "min": 70}]}, {"id": "curry-haricots-rouges", "titre": "Curry de haricots rouges", "desc": "Haricots rouges dans une sauce tomate épicée à l'indienne, végétarien. Trempage la veille.", "base": 6, "prep": 15, "cuisson": 90, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["vege", "legumineuses"], "acc": "riz", "fr": 4, "hue": 15, "astuce": "Plus les oignons sont dorés au départ, plus la sauce a de goût.", "ings": [{"k": "haricots_rouges_secs", "q": 500, "no": "trempés la veille"}, {"k": "oignon", "q": 3, "no": "émincés"}, {"k": "ail", "q": 4, "no": ""}, {"k": "gingembre", "q": 4, "no": "râpé"}, {"k": "garam_masala", "q": 3, "no": ""}, {"k": "cumin", "q": 2, "no": ""}, {"k": "curcuma", "q": 1, "no": ""}, {"k": "tomates", "q": 800, "no": ""}, {"k": "creme", "q": 20, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_rouges_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots, couvre-les d'eau froide sans sel et fais-les bouillir à gros bouillons 10 min. Égoutte.", "min": 10}, {"t": "Chauffe {huile} dans la cocotte et fais bien dorer {oignon}.", "min": 8}, {"t": "Ajoute {ail}, {gingembre}, {garam_masala}, {cumin} et {curcuma}. Remue 1 min."}, {"t": "Ajoute {tomates}, les haricots et 50 cl d'eau. Couvre et laisse mijoter à feu doux jusqu'à ce que les haricots soient fondants.", "min": 70}, {"t": "Ajoute {creme}, sale et laisse épaissir quelques minutes à découvert.", "min": 5}]}, {"id": "pates-haricots", "titre": "Pâtes et haricots à la tomate", "desc": "Petites pâtes et haricots blancs dans un bouillon tomaté, à l'italienne. Trempage la veille.", "base": 6, "prep": 15, "cuisson": 90, "budget": 1, "frigo": 3, "congel": "Oui (sans les pâtes)", "tags": ["pates", "legumineuses"], "acc": null, "fr": 3, "hue": 32, "astuce": "Le plat doit rester un peu liquide : les pâtes continuent de boire la sauce en reposant.", "ings": [{"k": "haricots_blancs_secs", "q": 300, "no": "trempés la veille"}, {"k": "pates", "q": 350, "no": "petites pâtes"}, {"k": "lardons", "q": 150, "no": "facultatif"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "carotte", "q": 2, "no": "en petits dés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "tomates", "q": 400, "no": ""}, {"k": "bouillon", "q": 150, "no": ""}, {"k": "thym", "q": 1, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_blancs_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots. Porte-les à ébullition 5 min dans de l'eau froide sans sel, puis égoutte.", "min": 10}, {"t": "Dans une grande casserole, fais revenir {lardons} dans {huile} avec {oignon}, {carotte} et {ail}.", "min": 8}, {"t": "Ajoute les haricots, {tomates}, {thym} et {bouillon}. Couvre et laisse cuire à feu doux jusqu'à ce que les haricots soient tendres.", "min": 60}, {"t": "Ajoute {pates} directement dans la casserole et cuis-les le temps indiqué sur le paquet, en remuant. Rajoute un peu d'eau si ça devient trop épais. Sale.", "min": 12}]}, {"id": "saucisses-lentilles", "titre": "Saucisses aux lentilles vertes", "desc": "Le plat de bistrot : lentilles vertes, saucisses fumées, carottes. Sans trempage.", "base": 6, "prep": 15, "cuisson": 45, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["porc", "legumineuses"], "acc": null, "fr": 3, "hue": 40, "astuce": "Une cuillère de moutarde ou un trait de vinaigre à la fin réveille les lentilles.", "ings": [{"k": "lentilles_vertes", "q": 450, "no": ""}, {"k": "saucisse", "q": 6, "no": ""}, {"k": "carotte", "q": 3, "no": "en rondelles"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 2, "no": ""}, {"k": "bouquet", "q": 1, "no": ""}, {"k": "bouillon", "q": 120, "no": ""}, {"k": "moutarde", "q": 1, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Rince {lentilles_vertes} sous l'eau froide."}, {"t": "Dans la cocotte, fais revenir {oignon} et {carotte} dans {huile}.", "min": 5}, {"t": "Ajoute les lentilles, {ail} écrasé, {bouquet} et {bouillon}. Porte à frémissement.", "min": 5}, {"t": "Pique {saucisse} et pose-les sur les lentilles. Couvre et laisse cuire à feu doux jusqu'à ce que les lentilles soient tendres.", "min": 35}, {"t": "Retire le bouquet garni, ajoute {moutarde} et sale si besoin (les saucisses le sont déjà)."}]}, {"id": "tajine-poulet-haricots", "titre": "Tajine de poulet aux haricots blancs et citron", "desc": "Cuisses de poulet, haricots blancs, citron et ras el hanout, à la cocotte. Trempage la veille.", "base": 6, "prep": 20, "cuisson": 90, "budget": 2, "frigo": 3, "congel": "Oui", "tags": ["volaille", "legumineuses"], "acc": null, "fr": 1, "hue": 48, "astuce": "Les haricots cuisent dans le jus du poulet : c'est ce qui leur donne tout leur goût.", "ings": [{"k": "haricots_blancs_secs", "q": 300, "no": "trempés la veille"}, {"k": "cuisse_poulet", "q": 6, "no": ""}, {"k": "oignon", "q": 3, "no": "émincés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "gingembre", "q": 3, "no": "râpé"}, {"k": "ras_el_hanout", "q": 3, "no": ""}, {"k": "curcuma", "q": 1, "no": ""}, {"k": "citron", "q": 2, "no": ""}, {"k": "bouillon", "q": 80, "no": ""}, {"k": "persil", "q": 0.5, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_blancs_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots. Porte-les à ébullition 5 min dans de l'eau froide sans sel, puis égoutte.", "min": 10}, {"t": "Dans la cocotte, dore {cuisse_poulet} dans {huile} côté peau, puis réserve.", "min": 10}, {"t": "Fais fondre {oignon}, puis ajoute {ail}, {gingembre}, {ras_el_hanout} et {curcuma}.", "min": 6}, {"t": "Ajoute les haricots et {bouillon}, pose le poulet dessus. Couvre et laisse mijoter à feu doux.", "min": 50}, {"t": "Ajoute le jus d'un {citron} et le second coupé en quartiers, laisse cuire encore à découvert, puis parsème de {persil}. Sale.", "min": 15}]}, {"id": "goulash", "titre": "Goulash de bœuf", "desc": "Bœuf fondant au paprika, poivrons et oignons, à la hongroise.", "base": 6, "prep": 20, "cuisson": 150, "budget": 2, "frigo": 4, "congel": "Oui, très bien", "tags": ["boeuf"], "acc": "pates", "fr": 2, "hue": 6, "astuce": "Le paprika s'ajoute hors du feu : brûlé, il devient amer.", "ings": [{"k": "paleron", "q": 1200, "no": ""}, {"k": "oignon", "q": 4, "no": "émincés"}, {"k": "poivron", "q": 2, "no": "en lanières"}, {"k": "ail", "q": 3, "no": ""}, {"k": "paprika", "q": 9, "no": "≈ 3 c. à s."}, {"k": "cumin", "q": 1, "no": ""}, {"k": "concentre_tomate", "q": 70, "no": ""}, {"k": "tomates", "q": 400, "no": ""}, {"k": "bouillon", "q": 80, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Coupe {paleron} en cubes si besoin et éponge-les."}, {"t": "Dore la viande dans {huile} en 2 ou 3 fournées. Réserve.", "min": 12}, {"t": "Fais fondre longuement {oignon} dans la même cocotte, ils doivent être bien dorés.", "min": 10}, {"t": "Hors du feu, ajoute {paprika}, {cumin}, {ail} et {concentre_tomate}. Remue 30 secondes : le paprika brûle vite."}, {"t": "Remets la viande, ajoute {poivron}, {tomates} et {bouillon}. Couvre et laisse mijoter à feu très doux.", "min": 120}, {"t": "Sale et laisse réduire à découvert si la sauce est trop liquide.", "min": 10}]}, {"id": "joues-porc-moutarde", "titre": "Joues de porc braisées à la moutarde", "desc": "Joues fondantes à la cuillère, sauce moutarde et carottes.", "base": 6, "prep": 15, "cuisson": 135, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["porc"], "acc": "pates", "fr": 2, "hue": 36, "astuce": "Les joues sont vendues déjà parées : rien à découper, il suffit d'attendre.", "ings": [{"k": "joue_porc", "q": 1500, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "carotte", "q": 4, "no": "en rondelles"}, {"k": "ail", "q": 2, "no": ""}, {"k": "moutarde", "q": 4, "no": ""}, {"k": "bouillon", "q": 60, "no": ""}, {"k": "thym", "q": 1, "no": ""}, {"k": "laurier", "q": 2, "no": ""}, {"k": "creme", "q": 20, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Dore {joue_porc} entières dans {huile} sur toutes les faces. Réserve.", "min": 10}, {"t": "Fais revenir {oignon} et {carotte} dans la même cocotte.", "min": 5}, {"t": "Remets les joues, badigeonne-les de {moutarde}, ajoute {ail}, {thym}, {laurier} et {bouillon}.", "min": 2}, {"t": "Couvre et laisse cuire à feu très doux. Les joues doivent se couper à la cuillère.", "min": 110}, {"t": "Ajoute {creme}, laisse réduire à découvert et sale.", "min": 8}]}, {"id": "porc-caramel", "titre": "Porc au caramel", "desc": "Échine de porc confite dans un caramel à la sauce soja, façon vietnamienne.", "base": 6, "prep": 15, "cuisson": 55, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["porc"], "acc": "riz", "fr": 2, "hue": 30, "astuce": "Pas de sel : la sauce soja suffit.", "ings": [{"k": "echine_porc", "q": 1200, "no": ""}, {"k": "sucre", "q": 100, "no": ""}, {"k": "sauce_soja", "q": 8, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "gingembre", "q": 3, "no": "râpé"}], "etapes": [{"t": "Coupe {echine_porc} en cubes de 3 cm si besoin."}, {"t": "Dans la cocotte, fais fondre {sucre} avec 3 c. à s. d'eau sans remuer, jusqu'à obtenir un caramel ambré.", "min": 6}, {"t": "Hors du feu, verse 20 cl d'eau chaude d'un coup en te reculant (ça crache), puis remue pour dissoudre le caramel."}, {"t": "Ajoute la viande, {oignon}, {ail}, {gingembre} et {sauce_soja}. Couvre et laisse mijoter à feu doux.", "min": 40}, {"t": "Découvre et laisse réduire en remuant jusqu'à ce que la sauce nappe la viande.", "min": 10}]}, {"id": "bolognaise", "titre": "Bolognaise maison", "desc": "La sauce qui mijote longtemps, à faire en grande quantité et à congeler.", "base": 6, "prep": 15, "cuisson": 90, "budget": 1, "frigo": 3, "congel": "Oui, très bien", "tags": ["boeuf"], "acc": "pates", "fr": 1, "hue": 2, "astuce": "Plus elle mijote, meilleure elle est. Une pincée de sucre corrige l'acidité des tomates.", "ings": [{"k": "boeuf_hache", "q": 800, "no": ""}, {"k": "oignon", "q": 2, "no": "en petits dés"}, {"k": "carotte", "q": 2, "no": "en petits dés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "concentre_tomate", "q": 70, "no": ""}, {"k": "tomates", "q": 800, "no": ""}, {"k": "passata", "q": 700, "no": ""}, {"k": "basilic", "q": 2, "no": ""}, {"k": "sucre", "q": 5, "no": "1 pincée"}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais revenir {oignon} et {carotte} dans {huile} à feu moyen.", "min": 8}, {"t": "Ajoute {boeuf_hache} et émiette-le jusqu'à ce qu'il soit bien coloré.", "min": 8}, {"t": "Ajoute {ail} et {concentre_tomate}, remue 1 min."}, {"t": "Ajoute {tomates}, {passata}, {basilic}, {sucre} et 20 cl d'eau. Couvre à moitié et laisse mijoter à feu très doux en remuant de temps en temps.", "min": 70}, {"t": "Sale et poivre."}]}, {"id": "poulet-tikka-masala", "titre": "Poulet tikka masala", "desc": "Poulet mariné au yaourt dans une sauce tomate crémeuse et épicée.", "base": 6, "prep": 15, "cuisson": 30, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["volaille", "rapide"], "acc": "riz", "fr": 1, "hue": 20, "astuce": "La marinade au yaourt attendrit le poulet, même 10 minutes suffisent.", "ings": [{"k": "haut_cuisse", "q": 900, "no": "en morceaux"}, {"k": "yaourt", "q": 250, "no": ""}, {"k": "garam_masala", "q": 4, "no": ""}, {"k": "curcuma", "q": 1, "no": ""}, {"k": "cumin", "q": 1, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "gingembre", "q": 3, "no": "râpé"}, {"k": "tomates", "q": 800, "no": ""}, {"k": "creme", "q": 20, "no": ""}, {"k": "citron", "q": 0.5, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Mélange {haut_cuisse} avec {yaourt}, la moitié de {garam_masala} et une pincée de sel. Laisse mariner pendant que tu prépares le reste (ou la veille au frigo)."}, {"t": "Égoutte le poulet et dore-le dans {huile} à feu vif. Réserve.", "min": 6}, {"t": "Fais fondre {oignon}, puis ajoute {ail}, {gingembre}, le reste de {garam_masala}, {curcuma} et {cumin}.", "min": 6}, {"t": "Ajoute {tomates}, remets le poulet et laisse mijoter.", "min": 15}, {"t": "Ajoute {creme} et le jus de {citron}, puis sale.", "min": 3}]}, {"id": "poulet-yassa", "titre": "Poulet yassa", "desc": "Poulet au citron et à la moutarde sur une montagne d'oignons fondants, à la sénégalaise.", "base": 6, "prep": 20, "cuisson": 45, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["volaille"], "acc": "riz", "fr": 1, "hue": 52, "astuce": "Le secret, c'est la quantité d'oignons : ils font toute la sauce.", "ings": [{"k": "cuisse_poulet", "q": 6, "no": ""}, {"k": "oignon", "q": 6, "no": "émincés finement"}, {"k": "citron", "q": 3, "no": ""}, {"k": "moutarde", "q": 3, "no": ""}, {"k": "ail", "q": 3, "no": ""}, {"k": "piment", "q": 0.5, "no": "selon ton goût"}, {"k": "bouillon", "q": 20, "no": ""}, {"k": "huile", "q": 3, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Mélange {cuisse_poulet} avec le jus de {citron}, {moutarde}, {ail} écrasé, {piment} et une pincée de sel. Laisse mariner au moins 15 min (ou la veille)."}, {"t": "Égoutte le poulet (garde la marinade) et dore-le dans {huile}. Réserve.", "min": 10}, {"t": "Fais fondre {oignon} dans la même cocotte à feu moyen, ils doivent devenir dorés et confits.", "min": 15}, {"t": "Ajoute la marinade et {bouillon}, remets le poulet, couvre et laisse mijoter à feu doux.", "min": 25}]}, {"id": "mafe-poulet", "titre": "Mafé de poulet", "desc": "Poulet mijoté dans une sauce tomate au beurre de cacahuète, avec des carottes.", "base": 6, "prep": 15, "cuisson": 45, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["volaille"], "acc": "riz", "fr": 1, "hue": 26, "astuce": "Choisis un beurre de cacahuète sans sucre ajouté pour une sauce moins écœurante.", "ings": [{"k": "haut_cuisse", "q": 900, "no": "en morceaux"}, {"k": "beurre_cacahuete", "q": 200, "no": ""}, {"k": "concentre_tomate", "q": 70, "no": ""}, {"k": "tomates", "q": 400, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "carotte", "q": 3, "no": "en rondelles"}, {"k": "piment", "q": 0.5, "no": "selon ton goût"}, {"k": "bouillon", "q": 60, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Dore {haut_cuisse} dans {huile}, puis réserve.", "min": 8}, {"t": "Fais fondre {oignon} et {ail}, ajoute {concentre_tomate} et remue 1 min.", "min": 5}, {"t": "Délaye {beurre_cacahuete} dans {bouillon} chaud, puis verse dans la cocotte avec {tomates}, {carotte} et {piment}."}, {"t": "Remets le poulet, couvre et laisse mijoter à feu doux en remuant de temps en temps (la sauce attache facilement).", "min": 30}, {"t": "Sale et laisse épaissir à découvert si besoin.", "min": 5}]}, {"id": "poulet-cajun-creme", "titre": "Poulet et poivrons, sauce cajun crémeuse", "desc": "Émincé de poulet et poivrons dans une sauce crème relevée.", "base": 6, "prep": 10, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Possible", "tags": ["volaille", "rapide"], "acc": "riz", "fr": 1, "hue": 10, "astuce": "Sans épices cajun : mélange paprika, ail en poudre, thym et une pointe de piment.", "ings": [{"k": "filet_poulet", "q": 900, "no": "en lanières"}, {"k": "poivron", "q": 3, "no": "en lanières"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "cajun", "q": 3, "no": ""}, {"k": "creme", "q": 30, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Mélange {filet_poulet} avec {cajun} et une pincée de sel."}, {"t": "Saisis le poulet à feu vif dans {huile}, puis réserve.", "min": 5}, {"t": "Fais sauter {poivron} et {oignon} dans la même poêle.", "min": 5}, {"t": "Remets le poulet, ajoute {creme} et laisse réduire jusqu'à ce que la sauce nappe.", "min": 4}]}, {"id": "saucisses-tomate-poivrons", "titre": "Saucisses sauce tomate et poivrons", "desc": "Saucisses de Toulouse mijotées dans une sauce tomate aux poivrons.", "base": 6, "prep": 5, "cuisson": 25, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["porc", "rapide"], "acc": "riz", "fr": 2, "hue": 96, "astuce": "Pique les saucisses avant de les dorer : elles éclatent moins.", "ings": [{"k": "saucisse_toulouse", "q": 9, "no": ""}, {"k": "poivron", "q": 3, "no": "en lanières"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "tomates", "q": 800, "no": ""}, {"k": "thym", "q": 1, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Pique {saucisse_toulouse} et dore-les dans {huile} sur toutes les faces.", "min": 6}, {"t": "Ajoute {oignon} et {poivron}, puis laisse fondre en remuant.", "min": 5}, {"t": "Ajoute {tomates} et {thym}. Couvre et laisse mijoter.", "min": 15}, {"t": "Goûte et sale si besoin."}]}, {"id": "lentilles-corail-saucisse", "titre": "Lentilles corail à la saucisse fumée", "desc": "Lentilles corail fondantes, carottes et saucisse fumée : les lentilles cuisent en 15 min sans trempage.", "base": 6, "prep": 5, "cuisson": 20, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["porc", "legumineuses", "rapide"], "acc": null, "fr": 3, "hue": 34, "astuce": "Les lentilles corail sont les seules légumineuses sèches qui cuisent aussi vite, sans trempage.", "ings": [{"k": "lentilles", "q": 400, "no": "rincées"}, {"k": "saucisse", "q": 6, "no": ""}, {"k": "carotte", "q": 2, "no": "en petits dés"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "ail", "q": 2, "no": ""}, {"k": "cumin", "q": 1, "no": ""}, {"k": "tomates", "q": 400, "no": ""}, {"k": "bouillon", "q": 100, "no": ""}, {"k": "huile", "q": 1, "no": ""}], "etapes": [{"t": "Coupe {saucisse} en rondelles et dore-les dans {huile}.", "min": 4}, {"t": "Ajoute {oignon}, {carotte}, {ail} et {cumin}.", "min": 3}, {"t": "Ajoute {lentilles}, {tomates} et {bouillon}. Laisse cuire à couvert en remuant de temps en temps.", "min": 15}, {"t": "Goûte avant de saler : la saucisse et le bouillon le sont déjà."}]}, {"id": "chakchouka", "titre": "Chakchouka", "desc": "Œufs pochés dans une sauce tomate-poivrons épicée, à servir avec du pain.", "base": 6, "prep": 10, "cuisson": 20, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["vege", "rapide"], "acc": null, "fr": 4, "hue": 8, "astuce": "Les œufs ne se réchauffent pas bien : fais la sauce en double et ajoute les œufs au moment de manger.", "ings": [{"k": "oeuf", "q": 12, "no": ""}, {"k": "poivron", "q": 4, "no": "en lanières"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "tomates", "q": 800, "no": ""}, {"k": "cumin", "q": 1, "no": ""}, {"k": "paprika", "q": 1, "no": ""}, {"k": "piment", "q": 0.5, "no": "selon ton goût"}, {"k": "huile", "q": 3, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais revenir {oignon} et {poivron} dans {huile} dans une grande poêle.", "min": 8}, {"t": "Ajoute {ail}, {cumin}, {paprika}, {piment}, puis {tomates}. Sale et laisse réduire.", "min": 8}, {"t": "Creuse 12 petits puits dans la sauce et casse {oeuf} dedans. Couvre et laisse cuire jusqu'à ce que les blancs soient pris.", "min": 6}]}, {"id": "pates-lardons-courgettes", "titre": "Pâtes crème, lardons et courgettes", "desc": "Le classique du soir pressé, avec des courgettes poêlées.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "porc", "rapide"], "acc": null, "fr": 2, "hue": 44, "astuce": "Coupe les courgettes en petits dés : elles cuisent en même temps que les pâtes.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "lardons", "q": 300, "no": ""}, {"k": "courgette", "q": 3, "no": "en petits dés"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "creme", "q": 40, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, fais dorer {lardons} et {oignon} à sec dans une grande poêle.", "min": 5}, {"t": "Ajoute {courgette} et fais-les sauter à feu vif jusqu'à ce qu'elles soient tendres et un peu dorées, puis ajoute {creme}.", "min": 6}, {"t": "Égoutte les pâtes en gardant un fond d'eau de cuisson et mélange avec la sauce."}]}, {"id": "poulet-paprika-creme", "titre": "Émincé de poulet au paprika et à la crème", "desc": "Poulet tendre dans une sauce crème au paprika.", "base": 6, "prep": 10, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Possible", "tags": ["volaille", "rapide"], "acc": "riz", "fr": 1, "hue": 16, "astuce": "Une cuillère de concentré de tomate en plus donne une couleur et un goût plus profonds.", "ings": [{"k": "filet_poulet", "q": 900, "no": "en lanières"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "paprika", "q": 3, "no": ""}, {"k": "creme", "q": 40, "no": ""}, {"k": "bouillon", "q": 10, "no": ""}, {"k": "persil", "q": 0.5, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Saisis {filet_poulet} dans {huile} à feu vif, puis réserve.", "min": 5}, {"t": "Fais fondre {oignon} dans la même poêle.", "min": 4}, {"t": "Ajoute {paprika}, remue quelques secondes, puis {bouillon} et {creme}."}, {"t": "Remets le poulet et laisse réduire. Parsème de {persil} et sale.", "min": 5}]}, {"id": "poulet-teriyaki", "titre": "Poulet teriyaki", "desc": "Poulet laqué dans une sauce soja, miel et gingembre.", "base": 6, "prep": 10, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["volaille", "rapide"], "acc": "riz", "fr": 1, "hue": 0, "astuce": "Pas de sel : la sauce soja suffit.", "ings": [{"k": "filet_poulet", "q": 900, "no": "en morceaux"}, {"k": "sauce_soja", "q": 12, "no": ""}, {"k": "miel", "q": 4, "no": ""}, {"k": "gingembre", "q": 3, "no": "râpé"}, {"k": "ail", "q": 2, "no": ""}, {"k": "huile", "q": 2, "no": ""}], "etapes": [{"t": "Mélange {sauce_soja}, {miel}, {gingembre}, {ail} écrasé et 10 cl d'eau."}, {"t": "Saisis {filet_poulet} dans {huile} à feu vif.", "min": 6}, {"t": "Verse la sauce et laisse réduire en remuant jusqu'à ce qu'elle soit sirupeuse et nappe le poulet.", "min": 6}]}, {"id": "gnocchis-tomate-lardons", "titre": "Gnocchis sauce tomate, lardons et crème", "desc": "Gnocchis poêlés dans une sauce tomate crémeuse aux lardons.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["porc", "rapide"], "acc": null, "fr": 2, "hue": 356, "astuce": "Les gnocchis poêlés sont croustillants, ceux cuits à l'eau plus moelleux.", "ings": [{"k": "gnocchis", "q": 1140, "no": "3 sachets"}, {"k": "lardons", "q": 300, "no": ""}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "tomates", "q": 800, "no": ""}, {"k": "creme", "q": 20, "no": ""}, {"k": "basilic", "q": 1, "no": ""}, {"k": "huile", "q": 1, "no": ""}], "etapes": [{"t": "Fais dorer {lardons} et {oignon} dans une grande poêle.", "min": 5}, {"t": "Ajoute {tomates} et {basilic}, puis laisse réduire.", "min": 6}, {"t": "Pendant ce temps, fais dorer {gnocchis} dans {huile} dans une autre poêle (ou cuis-les 2 min dans l'eau bouillante).", "min": 5}, {"t": "Ajoute {creme} à la sauce, puis les gnocchis, et mélange."}]}, {"id": "boeuf-soja-gingembre", "titre": "Bœuf haché sauté soja-gingembre", "desc": "Bœuf haché, carottes et oignons laqués à la sauce soja, servi sur du riz.", "base": 6, "prep": 10, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["boeuf", "rapide"], "acc": "riz", "fr": 1, "hue": 22, "astuce": "Laisse le bœuf dorer sans trop remuer au début : c'est ce qui lui donne du goût.", "ings": [{"k": "boeuf_hache", "q": 750, "no": ""}, {"k": "carotte", "q": 3, "no": "râpées"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 3, "no": ""}, {"k": "gingembre", "q": 4, "no": "râpé"}, {"k": "sauce_soja", "q": 10, "no": ""}, {"k": "miel", "q": 2, "no": ""}, {"k": "huile", "q": 1, "no": ""}], "etapes": [{"t": "Fais revenir {oignon} et {carotte} dans {huile} à feu vif.", "min": 4}, {"t": "Ajoute {boeuf_hache} et émiette-le jusqu'à ce qu'il soit bien doré.", "min": 6}, {"t": "Ajoute {ail}, {gingembre}, {sauce_soja} et {miel}, puis laisse caraméliser 2 min en remuant.", "min": 3}]}, {"id": "curry-colin-coco", "titre": "Curry express de colin au lait de coco", "desc": "Poisson blanc dans une sauce curry, tomate et coco.", "base": 6, "prep": 10, "cuisson": 20, "budget": 2, "frigo": 2, "congel": "Non", "tags": ["poisson", "rapide"], "acc": "riz", "fr": 4, "hue": 190, "astuce": "Ne remue pas trop une fois le poisson ajouté, il s'effrite vite.", "ings": [{"k": "colin", "q": 900, "no": "décongelé, en morceaux"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 2, "no": ""}, {"k": "gingembre", "q": 3, "no": "râpé"}, {"k": "curry", "q": 6, "no": ""}, {"k": "tomates", "q": 400, "no": ""}, {"k": "coco", "q": 40, "no": ""}, {"k": "citron", "q": 0.5, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais décongeler {colin} la veille au frigo, puis éponge-le et coupe-le en gros morceaux."}, {"t": "Fais fondre {oignon} dans {huile}, puis ajoute {ail}, {gingembre} et {curry}.", "min": 5}, {"t": "Ajoute {tomates} et {coco}, sale et laisse mijoter.", "min": 8}, {"t": "Dépose le poisson dans la sauce, couvre et laisse cuire doucement sans remuer. Ajoute le jus de {citron}.", "min": 7}]}, {"id": "pates-poulet-curry", "titre": "Pâtes poulet-curry à la crème", "desc": "Émincé de poulet, oignon et curry dans une sauce crème.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "volaille", "rapide"], "acc": null, "fr": 1, "hue": 50, "astuce": "Ajoute un filet d'eau de cuisson si la sauce épaissit trop.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "filet_poulet", "q": 600, "no": "en lanières"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "curry", "q": 3, "no": ""}, {"k": "creme", "q": 40, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, saisis {filet_poulet} dans {huile} avec {oignon}.", "min": 6}, {"t": "Ajoute {curry}, remue quelques secondes, puis {creme}. Laisse chauffer et sale.", "min": 3}, {"t": "Égoutte les pâtes et mélange-les avec la sauce."}]}, {"id": "pates-thon-citron", "titre": "Pâtes au thon, crème et citron", "desc": "Thon, crème, zeste de citron et persil.", "base": 6, "prep": 5, "cuisson": 12, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "poisson", "rapide"], "acc": null, "fr": 2, "hue": 200, "astuce": "Râpe le zeste du citron avant de le presser, c'est beaucoup plus facile.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "thon", "q": 420, "no": "3 boîtes, égoutté"}, {"k": "creme", "q": 40, "no": ""}, {"k": "citron", "q": 1, "no": ""}, {"k": "ail", "q": 1, "no": ""}, {"k": "persil", "q": 0.5, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, fais revenir {ail} écrasé dans {huile}, puis ajoute {creme}, le zeste et le jus de {citron}.", "min": 3}, {"t": "Ajoute {thon} émietté et réchauffe doucement.", "min": 2}, {"t": "Égoutte les pâtes, mélange-les avec la sauce et parsème de {persil}."}]}, {"id": "pates-chorizo-poivron", "titre": "Pâtes chorizo-poivron à la crème", "desc": "Le chorizo colore et parfume la sauce tout seul.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "porc", "rapide"], "acc": null, "fr": 2, "hue": 8, "astuce": "Pas de sel ni d'huile : le chorizo apporte les deux.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "chorizo", "q": 200, "no": "en dés"}, {"k": "poivron", "q": 2, "no": "en lanières"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "creme", "q": 40, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, fais revenir {chorizo} à sec, puis ajoute {poivron} et {oignon}.", "min": 8}, {"t": "Ajoute {creme} et laisse chauffer 2 min.", "min": 2}, {"t": "Égoutte les pâtes et mélange-les avec la sauce."}]}, {"id": "pates-jambon-moutarde", "titre": "Pâtes jambon, crème et moutarde", "desc": "Dés de jambon dans une sauce crème à la moutarde.", "base": 6, "prep": 5, "cuisson": 12, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "porc", "rapide"], "acc": null, "fr": 2, "hue": 60, "astuce": "Moutarde à l'ancienne pour le croquant, moutarde forte pour le piquant.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "jambon_des", "q": 300, "no": ""}, {"k": "creme", "q": 40, "no": ""}, {"k": "moutarde", "q": 2, "no": ""}, {"k": "persil", "q": 0.5, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, fais chauffer {creme} avec {moutarde} dans une poêle, puis ajoute {jambon_des}.", "min": 3}, {"t": "Égoutte les pâtes, mélange-les avec la sauce et parsème de {persil}."}]}, {"id": "pates-saucisse-tomate", "titre": "Pâtes à la saucisse, tomate et crème", "desc": "Chair de saucisse de Toulouse émiettée dans une sauce tomate crémeuse.", "base": 6, "prep": 5, "cuisson": 20, "budget": 1, "frigo": 3, "congel": "Oui (la sauce)", "tags": ["pates", "porc", "rapide"], "acc": null, "fr": 2, "hue": 14, "astuce": "Fends la peau de la saucisse sur la longueur : la chair sort toute seule.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "saucisse_toulouse", "q": 6, "no": "sans la peau"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "ail", "q": 2, "no": ""}, {"k": "tomates", "q": 800, "no": ""}, {"k": "creme", "q": 20, "no": ""}, {"k": "basilic", "q": 1, "no": ""}], "etapes": [{"t": "Retire la peau de {saucisse_toulouse} et émiette la chair dans une poêle chaude.", "min": 6}, {"t": "Ajoute {oignon} et {ail}, puis {tomates} et {basilic}. Laisse mijoter.", "min": 10}, {"t": "Pendant ce temps, fais cuire {pates} dans de l'eau salée.", "min": 10}, {"t": "Ajoute {creme} à la sauce, puis mélange avec les pâtes égouttées."}]}, {"id": "pates-poireaux-lardons", "titre": "Pâtes poireaux-lardons à la crème", "desc": "Fondue de poireaux et lardons, la sauce douce par excellence.", "base": 6, "prep": 10, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "porc", "rapide"], "acc": null, "fr": 2, "hue": 90, "astuce": "Couvrir les poireaux les fait fondre plus vite sans qu'ils brûlent.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "poireau", "q": 4, "no": "en rondelles fines"}, {"k": "lardons", "q": 300, "no": ""}, {"k": "beurre", "q": 20, "no": ""}, {"k": "creme", "q": 40, "no": ""}], "etapes": [{"t": "Rince bien {poireau} et coupe-les en rondelles fines."}, {"t": "Fais dorer {lardons}, puis ajoute {beurre} et les poireaux. Couvre et laisse fondre à feu moyen.", "min": 12}, {"t": "Pendant ce temps, fais cuire {pates} dans de l'eau salée.", "min": 10}, {"t": "Ajoute {creme} aux poireaux, puis mélange avec les pâtes égouttées."}]}, {"id": "pates-poulet-boursin", "titre": "Pâtes au poulet et fromage ail et fines herbes", "desc": "Le fromage fond et fait toute la sauce.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "volaille", "rapide"], "acc": null, "fr": 1, "hue": 120, "astuce": "Ajoute une louche d'eau de cuisson pour une sauce bien lisse.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "filet_poulet", "q": 600, "no": "en lanières"}, {"k": "fromage_ail", "q": 300, "no": "2 boîtes"}, {"k": "creme", "q": 20, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, saisis {filet_poulet} dans {huile}.", "min": 6}, {"t": "Baisse le feu, ajoute {fromage_ail} et {creme}, puis remue jusqu'à ce que le fromage fonde.", "min": 2}, {"t": "Égoutte les pâtes en gardant un peu d'eau de cuisson et mélange avec la sauce."}]}, {"id": "pates-boeuf-paprika", "titre": "Pâtes au bœuf haché, crème et paprika", "desc": "Façon stroganoff sans champignons.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Oui (la sauce)", "tags": ["pates", "boeuf", "rapide"], "acc": null, "fr": 1, "hue": 18, "astuce": "La moutarde et le concentré de tomate apportent le petit goût acidulé du stroganoff.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "boeuf_hache", "q": 600, "no": ""}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "paprika", "q": 3, "no": ""}, {"k": "concentre_tomate", "q": 30, "no": ""}, {"k": "moutarde", "q": 1, "no": ""}, {"k": "creme", "q": 40, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, fais revenir {oignon} dans {huile}, puis ajoute {boeuf_hache} et fais-le dorer.", "min": 8}, {"t": "Ajoute {paprika}, {concentre_tomate}, {moutarde} et {creme}. Laisse chauffer et sale.", "min": 3}, {"t": "Mélange avec les pâtes égouttées."}]}, {"id": "pates-epinards-ail", "titre": "Pâtes crème, épinards et ail", "desc": "Épinards surgelés, ail et crème, végétarien.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["pates", "vege", "rapide"], "acc": null, "fr": 4, "hue": 110, "astuce": "Pour une version non végétarienne, ajoute 200 g de lardons dorés.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "epinards", "q": 600, "no": ""}, {"k": "ail", "q": 3, "no": ""}, {"k": "creme", "q": 40, "no": ""}, {"k": "beurre", "q": 20, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, fais fondre {beurre} avec {ail} écrasé, puis ajoute {epinards} encore surgelés et laisse décongeler à couvert.", "min": 8}, {"t": "Ajoute {creme}, sale et poivre.", "min": 2}, {"t": "Mélange avec les pâtes égouttées."}]}, {"id": "pates-tartiflette", "titre": "Pâtes façon tartiflette", "desc": "Lardons, oignons, crème et reblochon fondu sur des pâtes.", "base": 6, "prep": 5, "cuisson": 15, "budget": 2, "frigo": 2, "congel": "Non", "tags": ["pates", "porc", "rapide"], "acc": null, "fr": 2, "hue": 42, "astuce": "Garde la croûte du reblochon : c'est elle qui donne le goût de la tartiflette.", "ings": [{"k": "pates", "q": 600, "no": ""}, {"k": "lardons", "q": 300, "no": ""}, {"k": "oignon", "q": 3, "no": "émincés"}, {"k": "creme", "q": 40, "no": ""}, {"k": "reblochon", "q": 450, "no": "1 pièce"}], "etapes": [{"t": "Fais cuire {pates} dans une grande casserole d'eau salée.", "min": 10}, {"t": "Pendant ce temps, fais dorer {lardons} et {oignon} à sec.", "min": 8}, {"t": "Ajoute {creme} et {reblochon} coupé en morceaux (avec la croûte), puis laisse fondre à feu doux.", "min": 3}, {"t": "Mélange avec les pâtes égouttées."}]}]);
+BASE.push(...[{"id": "oi-muchim", "titre": "Concombre épicé à la coréenne (oi muchim)", "desc": "Banchan frais et piquant, prêt en 15 minutes.", "base": 6, "prep": 15, "cuisson": 0, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "rapide"], "acc": null, "fr": 4, "hue": 140, "astuce": "Dégorger le concombre l'empêche de rendre de l'eau et de noyer la sauce.", "ings": [{"k": "concombre", "q": 2, "no": ""}, {"k": "ail", "q": 1, "no": ""}, {"k": "piment", "q": 1, "no": "flocons de préférence"}, {"k": "sauce_soja", "q": 2, "no": ""}, {"k": "vinaigre_riz", "q": 2, "no": ""}, {"k": "sucre", "q": 5, "no": "1 c. à c."}, {"k": "huile_sesame", "q": 1, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Coupe {concombre} en fines rondelles, sale-les légèrement et laisse dégorger, puis presse-les pour retirer l'eau.", "min": 10}, {"t": "Mélange {ail} écrasé, {piment}, {sauce_soja}, {vinaigre_riz}, {sucre} et {huile_sesame}."}, {"t": "Mélange la sauce avec le concombre et parsème de {graines_sesame}."}]}, {"id": "kongnamul-muchim", "titre": "Pousses de soja à l'ail et sésame (kongnamul muchim)", "desc": "Le banchan le plus courant en Corée, croquant et parfumé.", "base": 6, "prep": 5, "cuisson": 5, "budget": 1, "frigo": 3, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "legumineuses", "rapide"], "acc": null, "fr": 4, "hue": 60, "astuce": "Ne dépasse pas 3 minutes de cuisson : les pousses doivent rester croquantes.", "ings": [{"k": "germes_soja", "q": 400, "no": ""}, {"k": "ail", "q": 2, "no": ""}, {"k": "ciboule", "q": 0.5, "no": ""}, {"k": "huile_sesame", "q": 2, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Rince {germes_soja} et plonge-les dans l'eau bouillante salée, puis égoutte et refroidis sous l'eau froide.", "min": 3}, {"t": "Presse-les légèrement, puis mélange avec {ail} écrasé, {ciboule} émincée, {huile_sesame}, {graines_sesame} et une pincée de sel."}]}, {"id": "sigeumchi-namul", "titre": "Épinards au sésame (sigeumchi namul)", "desc": "Épinards à l'ail, sauce soja et sésame.", "base": 6, "prep": 5, "cuisson": 8, "budget": 1, "frigo": 3, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "rapide"], "acc": null, "fr": 4, "hue": 110, "astuce": "Plus tu presses les épinards, plus l'assaisonnement accroche.", "ings": [{"k": "epinards_branches", "q": 600, "no": ""}, {"k": "ail", "q": 1, "no": ""}, {"k": "sauce_soja", "q": 2, "no": ""}, {"k": "huile_sesame", "q": 1, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}], "etapes": [{"t": "Fais décongeler {epinards_branches} à la poêle à couvert, puis égoutte-les et presse-les bien.", "min": 6}, {"t": "Mélange avec {ail} écrasé, {sauce_soja}, {huile_sesame} et {graines_sesame}. Se mange tiède ou froid."}]}, {"id": "gamja-jorim", "titre": "Pommes de terre glacées soja-sucre (gamja jorim)", "desc": "Petits dés de pommes de terre laqués, sucrés-salés.", "base": 6, "prep": 10, "cuisson": 22, "budget": 1, "frigo": 4, "congel": "Non", "tags": ["accompagnement", "asie", "vege"], "acc": null, "fr": 4, "hue": 34, "astuce": "Ça se garde 4 jours au frigo et se mange froid, comme en Corée.", "ings": [{"k": "pdt", "q": 600, "no": "en dés de 2 cm"}, {"k": "sauce_soja", "q": 5, "no": ""}, {"k": "sucre", "q": 15, "no": "1 c. à s."}, {"k": "miel", "q": 1, "no": ""}, {"k": "ail", "q": 2, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}], "etapes": [{"t": "Coupe {pdt} en dés de 2 cm et rince-les à l'eau froide."}, {"t": "Fais-les revenir dans {huile} à feu moyen.", "min": 5}, {"t": "Ajoute {sauce_soja}, {sucre}, {ail} écrasé et 20 cl d'eau. Couvre et laisse cuire.", "min": 12}, {"t": "Découvre, ajoute {miel} et laisse réduire en remuant jusqu'à ce que les pommes de terre soient laquées. Parsème de {graines_sesame}.", "min": 5}]}, {"id": "kong-jorim", "titre": "Haricots noirs glacés au soja (kong jorim)", "desc": "Haricots noirs mijotés dans un sirop soja-sucre. Trempage la veille.", "base": 6, "prep": 5, "cuisson": 65, "budget": 1, "frigo": 5, "congel": "Oui", "tags": ["accompagnement", "asie", "vege", "legumineuses"], "acc": null, "fr": 4, "hue": 270, "astuce": "Ça se garde 5 jours au frigo : un petit bol en accompagnement de n'importe quel plat.", "ings": [{"k": "haricots_noirs_secs", "q": 200, "no": "trempés la veille"}, {"k": "sauce_soja", "q": 6, "no": ""}, {"k": "sucre", "q": 30, "no": ""}, {"k": "miel", "q": 1, "no": ""}, {"k": "huile_sesame", "q": 1, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}], "etapes": [{"t": "La veille, mets {haricots_noirs_secs} à tremper dans 3 fois leur volume d'eau froide."}, {"t": "Égoutte et rince les haricots, couvre-les d'eau froide et fais-les bouillir à gros bouillons 10 min, puis laisse frémir jusqu'à ce qu'ils soient tendres.", "min": 50}, {"t": "Égoutte en gardant 20 cl d'eau de cuisson. Remets les haricots dans la casserole avec cette eau, {sauce_soja} et {sucre}, puis laisse réduire à feu moyen en remuant.", "min": 15}, {"t": "Hors du feu, ajoute {miel}, {huile_sesame} et {graines_sesame}."}]}, {"id": "gyeran-mari", "titre": "Omelette roulée aux légumes (gyeran mari)", "desc": "Omelette roulée en couches fines, avec carotte et ciboule.", "base": 6, "prep": 10, "cuisson": 12, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "rapide"], "acc": null, "fr": 4, "hue": 48, "astuce": "Feu doux obligatoire : l'omelette doit rester jaune, sans coloration.", "ings": [{"k": "oeuf", "q": 8, "no": ""}, {"k": "carotte", "q": 1, "no": "râpée finement"}, {"k": "ciboule", "q": 0.5, "no": "émincée"}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Bats {oeuf} avec une pincée de sel, puis ajoute {carotte} et {ciboule}."}, {"t": "Chauffe un peu de {huile} dans une poêle à feu doux et verse une fine couche d'œuf. Quand elle est presque prise, roule-la vers un bord.", "min": 3}, {"t": "Verse un peu d'œuf dans l'espace libre en soulevant le rouleau pour qu'il coule dessous, puis roule à nouveau. Répète jusqu'à la fin.", "min": 8}, {"t": "Laisse tiédir 5 minutes et coupe en tranches."}]}, {"id": "hobak-bokkeum", "titre": "Courgettes sautées à l'ail et sésame (hobak bokkeum)", "desc": "Courgettes fondantes, ail et sésame.", "base": 6, "prep": 5, "cuisson": 7, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "rapide"], "acc": null, "fr": 4, "hue": 90, "astuce": "Feu vif et sans couvercle, sinon les courgettes rendent leur eau.", "ings": [{"k": "courgette", "q": 3, "no": "en demi-rondelles"}, {"k": "ail", "q": 2, "no": ""}, {"k": "sauce_soja", "q": 1, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "huile_sesame", "q": 1, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}], "etapes": [{"t": "Coupe {courgette} en demi-rondelles de 5 mm."}, {"t": "Fais-les sauter dans {huile} à feu vif avec {ail} écrasé.", "min": 5}, {"t": "Ajoute {sauce_soja}, laisse 1 min, puis {huile_sesame} et {graines_sesame}.", "min": 1}]}, {"id": "sunomono", "titre": "Concombre au vinaigre de riz (sunomono)", "desc": "Salade de concombre japonaise, sucrée-acidulée.", "base": 6, "prep": 10, "cuisson": 0, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "rapide"], "acc": null, "fr": 4, "hue": 170, "astuce": "Un économe permet de faire des tranches très fines sans mandoline.", "ings": [{"k": "concombre", "q": 2, "no": ""}, {"k": "vinaigre_riz", "q": 4, "no": ""}, {"k": "sucre", "q": 15, "no": "1 c. à s."}, {"k": "sauce_soja", "q": 1, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Tranche {concombre} très finement, sale légèrement et laisse dégorger, puis presse.", "min": 10}, {"t": "Mélange {vinaigre_riz}, {sucre} et {sauce_soja} jusqu'à ce que le sucre soit dissous."}, {"t": "Verse sur le concombre, parsème de {graines_sesame} et garde au frais 10 minutes avant de servir."}]}, {"id": "kinpira-carottes", "titre": "Carottes sautées soja-sésame (kinpira)", "desc": "Allumettes de carottes laquées, version japonaise sans alcool.", "base": 6, "prep": 10, "cuisson": 8, "budget": 1, "frigo": 4, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "rapide"], "acc": null, "fr": 4, "hue": 28, "astuce": "La recette d'origine utilise du mirin (alcool de riz), remplacé ici par le sucre.", "ings": [{"k": "carotte", "q": 5, "no": "en allumettes"}, {"k": "sauce_soja", "q": 3, "no": ""}, {"k": "sucre", "q": 10, "no": "2 c. à c."}, {"k": "huile_sesame", "q": 1, "no": ""}, {"k": "piment", "q": 0.5, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}], "etapes": [{"t": "Coupe {carotte} en fines allumettes."}, {"t": "Fais-les sauter dans {huile_sesame} à feu vif.", "min": 5}, {"t": "Ajoute {sucre}, {sauce_soja}, 2 c. à s. d'eau et {piment}, puis laisse réduire jusqu'à ce que le liquide ait disparu. Parsème de {graines_sesame}.", "min": 3}]}, {"id": "aubergines-miso", "titre": "Aubergines poêlées au miso", "desc": "Aubergines fondantes laquées d'une sauce miso sucrée.", "base": 6, "prep": 5, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Non", "tags": ["accompagnement", "asie", "vege", "rapide"], "acc": null, "fr": 4, "hue": 300, "astuce": "Version air fryer : 12 minutes à 200 °C avec seulement 1 c. à s. d'huile, puis la sauce à la poêle.", "ings": [{"k": "aubergine", "q": 3, "no": "en gros dés"}, {"k": "miso", "q": 60, "no": ""}, {"k": "sucre", "q": 15, "no": "1 c. à s."}, {"k": "vinaigre_riz", "q": 1, "no": ""}, {"k": "huile", "q": 4, "no": ""}, {"k": "graines_sesame", "q": 1, "no": ""}, {"k": "ciboule", "q": 0.5, "no": ""}], "etapes": [{"t": "Coupe {aubergine} en gros dés."}, {"t": "Fais-les dorer dans {huile} à feu moyen en remuant, avec un couvercle entrouvert, jusqu'à ce qu'elles soient fondantes.", "min": 12}, {"t": "Mélange {miso}, {sucre}, {vinaigre_riz} et 3 c. à s. d'eau. Verse sur les aubergines et enrobe-les.", "min": 2}, {"t": "Parsème de {graines_sesame} et de {ciboule}."}]}, {"id": "porc-aigre-doux", "titre": "Porc aigre-doux", "desc": "Porc croustillant, poivrons et ananas dans une sauce sucrée-acidulée.", "base": 6, "prep": 15, "cuisson": 20, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["porc", "asie"], "acc": "riz", "fr": 2, "hue": 38, "astuce": "La fécule donne une fine croûte au porc sans friture.", "ings": [{"k": "echine_porc", "q": 900, "no": "en cubes"}, {"k": "fecule_mais", "q": 3, "no": ""}, {"k": "ananas", "q": 565, "no": "1 boîte, jus gardé"}, {"k": "poivron", "q": 2, "no": "en morceaux"}, {"k": "oignon", "q": 1, "no": "en quartiers"}, {"k": "concentre_tomate", "q": 40, "no": ""}, {"k": "vinaigre", "q": 4, "no": ""}, {"k": "sucre", "q": 40, "no": ""}, {"k": "sauce_soja", "q": 4, "no": ""}, {"k": "huile", "q": 3, "no": ""}], "etapes": [{"t": "Enrobe {echine_porc} de {fecule_mais}."}, {"t": "Dore la viande dans {huile} à feu vif en 2 fournées, puis réserve.", "min": 10}, {"t": "Fais sauter {poivron} et {oignon} dans la même poêle.", "min": 3}, {"t": "Mélange le jus de l'{ananas} avec {concentre_tomate}, {vinaigre}, {sucre} et {sauce_soja}. Verse dans la poêle et laisse épaissir.", "min": 2}, {"t": "Remets le porc et les morceaux d'ananas, puis laisse mijoter jusqu'à ce que la sauce nappe.", "min": 5}]}, {"id": "poulet-kung-pao", "titre": "Poulet Kung Pao", "desc": "Poulet sauté aux cacahuètes, poivrons et piment, version sichuanaise.", "base": 6, "prep": 15, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["volaille", "asie", "rapide"], "acc": "riz", "fr": 1, "hue": 8, "astuce": "La version d'origine utilise du vin de riz : le vinaigre et le sucre suffisent ici.", "ings": [{"k": "haut_cuisse", "q": 800, "no": "en dés"}, {"k": "fecule_mais", "q": 1, "no": ""}, {"k": "cacahuetes", "q": 100, "no": ""}, {"k": "poivron", "q": 2, "no": "en dés"}, {"k": "ciboule", "q": 1, "no": "en tronçons"}, {"k": "ail", "q": 3, "no": ""}, {"k": "gingembre", "q": 3, "no": "râpé"}, {"k": "piment", "q": 1, "no": "flocons, selon ton goût"}, {"k": "sauce_soja", "q": 6, "no": ""}, {"k": "vinaigre", "q": 2, "no": ""}, {"k": "sucre", "q": 15, "no": ""}, {"k": "huile", "q": 2, "no": ""}], "etapes": [{"t": "Mélange {haut_cuisse} avec la moitié de {sauce_soja} et {fecule_mais}."}, {"t": "Mélange le reste de {sauce_soja} avec {vinaigre}, {sucre} et 5 cl d'eau."}, {"t": "Saisis le poulet dans {huile} à feu vif, puis réserve.", "min": 6}, {"t": "Fais sauter {piment}, {ail} et {gingembre} 30 secondes, puis {poivron}.", "min": 3}, {"t": "Remets le poulet, verse la sauce, ajoute {cacahuetes} et {ciboule}, puis laisse épaissir.", "min": 2}]}, {"id": "tofu-porc-piquant", "titre": "Tofu au porc haché sauce piquante (façon mapo)", "desc": "Tofu fondant et porc haché dans une sauce relevée au miso et au piment.", "base": 6, "prep": 10, "cuisson": 15, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["porc", "asie", "legumineuses", "rapide"], "acc": "riz", "fr": 1, "hue": 4, "astuce": "Le miso et le piment remplacent le doubanjiang, la pâte de fèves pimentée introuvable en supermarché.", "ings": [{"k": "tofu", "q": 800, "no": "en dés de 2 cm"}, {"k": "porc_hache", "q": 300, "no": ""}, {"k": "miso", "q": 30, "no": ""}, {"k": "ail", "q": 3, "no": ""}, {"k": "gingembre", "q": 3, "no": "râpé"}, {"k": "piment", "q": 2, "no": ""}, {"k": "sauce_soja", "q": 4, "no": ""}, {"k": "bouillon", "q": 30, "no": ""}, {"k": "fecule_mais", "q": 1, "no": ""}, {"k": "ciboule", "q": 0.5, "no": ""}, {"k": "huile", "q": 2, "no": ""}], "etapes": [{"t": "Plonge {tofu} en dés dans l'eau frémissante salée, puis égoutte : il se raffermit et ne s'écrase pas.", "min": 3}, {"t": "Fais dorer {porc_hache} dans {huile}.", "min": 5}, {"t": "Ajoute {ail}, {gingembre}, {piment} et {miso}. Remue 1 min."}, {"t": "Ajoute {bouillon}, {sauce_soja} et le tofu. Laisse mijoter doucement sans trop remuer.", "min": 6}, {"t": "Délaye {fecule_mais} dans 3 c. à s. d'eau, verse-la et laisse épaissir 1 min. Parsème de {ciboule}.", "min": 1}]}, {"id": "boeuf-oignons", "titre": "Bœuf sauté aux oignons", "desc": "Lanières de bœuf saisies, oignons et sauce soja, à la chinoise.", "base": 6, "prep": 10, "cuisson": 10, "budget": 2, "frigo": 2, "congel": "Non", "tags": ["boeuf", "asie", "rapide"], "acc": "riz", "fr": 2, "hue": 18, "astuce": "Saisis la viande par petites quantités : trop serrée, elle bout au lieu de griller.", "ings": [{"k": "boeuf_emince", "q": 700, "no": ""}, {"k": "oignon", "q": 3, "no": "en lamelles"}, {"k": "ail", "q": 2, "no": ""}, {"k": "gingembre", "q": 2, "no": "râpé"}, {"k": "sauce_soja", "q": 6, "no": ""}, {"k": "sucre", "q": 10, "no": ""}, {"k": "fecule_mais", "q": 1, "no": ""}, {"k": "huile", "q": 2, "no": ""}], "etapes": [{"t": "Mélange {boeuf_emince} avec {fecule_mais} et la moitié de {sauce_soja}."}, {"t": "Saisis le bœuf dans {huile} à feu très vif en 2 fournées, 2 minutes chacune, puis réserve.", "min": 4}, {"t": "Fais sauter {oignon}, {ail} et {gingembre}.", "min": 4}, {"t": "Remets le bœuf, ajoute le reste de {sauce_soja}, {sucre} et 5 cl d'eau, puis laisse napper 1 min.", "min": 1}]}, {"id": "nouilles-sautees-porc", "titre": "Nouilles sautées au porc et légumes", "desc": "Nouilles aux œufs, porc, carottes et poivron, façon lo mein.", "base": 6, "prep": 15, "cuisson": 15, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["porc", "asie", "pates", "rapide"], "acc": null, "fr": 2, "hue": 46, "astuce": "Rincer les nouilles à l'eau froide les empêche de coller dans la poêle.", "ings": [{"k": "nouilles_ble", "q": 500, "no": "2 paquets"}, {"k": "echine_porc", "q": 500, "no": "en fines lanières"}, {"k": "carotte", "q": 2, "no": "en julienne"}, {"k": "poivron", "q": 1, "no": "en lanières"}, {"k": "oignon", "q": 1, "no": "émincé"}, {"k": "ciboule", "q": 0.5, "no": ""}, {"k": "ail", "q": 2, "no": ""}, {"k": "gingembre", "q": 2, "no": "râpé"}, {"k": "sauce_soja", "q": 8, "no": ""}, {"k": "sucre", "q": 10, "no": ""}, {"k": "huile_sesame", "q": 1, "no": ""}, {"k": "huile", "q": 2, "no": ""}], "etapes": [{"t": "Fais cuire {nouilles_ble} selon le paquet, égoutte et passe-les sous l'eau froide.", "min": 5}, {"t": "Saisis {echine_porc} dans {huile} à feu vif, puis réserve.", "min": 5}, {"t": "Fais sauter {carotte}, {poivron}, {oignon}, {ail} et {gingembre}.", "min": 4}, {"t": "Ajoute les nouilles, le porc, {sauce_soja} et {sucre}, puis fais sauter 2 min. Finis avec {huile_sesame} et {ciboule}.", "min": 2}]}, {"id": "curry-vert-poulet", "titre": "Curry vert thaï au poulet", "desc": "Poulet, courgettes et poivron dans un lait de coco au curry vert.", "base": 6, "prep": 10, "cuisson": 20, "budget": 1, "frigo": 3, "congel": "Oui", "tags": ["volaille", "asie", "rapide"], "acc": "riz", "fr": 1, "hue": 100, "astuce": "Les pâtes de curry vert piquent plus ou moins selon les marques : commence par la moitié et goûte.", "ings": [{"k": "haut_cuisse", "q": 900, "no": "en morceaux"}, {"k": "pate_curry_vert", "q": 60, "no": "selon ton goût"}, {"k": "coco", "q": 80, "no": ""}, {"k": "courgette", "q": 2, "no": "en demi-rondelles"}, {"k": "poivron", "q": 1, "no": "en lanières"}, {"k": "sauce_poisson", "q": 2, "no": ""}, {"k": "sucre", "q": 10, "no": ""}, {"k": "citron_vert", "q": 1, "no": ""}, {"k": "coriandre", "q": 0.5, "no": ""}, {"k": "huile", "q": 1, "no": ""}], "etapes": [{"t": "Chauffe {huile} et fais revenir {pate_curry_vert} 1 min en remuant.", "min": 1}, {"t": "Ajoute la moitié de {coco} et laisse bouillonner.", "min": 2}, {"t": "Ajoute {haut_cuisse} et laisse cuire.", "min": 5}, {"t": "Ajoute le reste du lait de coco, {courgette}, {poivron}, {sauce_poisson} et {sucre}. Laisse mijoter.", "min": 12}, {"t": "Ajoute le jus de {citron_vert} et la {coriandre} ciselée."}]}, {"id": "bo-kho", "titre": "Bò kho, ragoût de bœuf vietnamien", "desc": "Bœuf mijoté à la citronnelle, à l'anis étoilé et aux carottes.", "base": 6, "prep": 20, "cuisson": 130, "budget": 2, "frigo": 4, "congel": "Oui, très bien", "tags": ["boeuf", "asie"], "acc": "riz", "fr": 2, "hue": 22, "astuce": "Au Vietnam, on le sert aussi avec une baguette pour saucer.", "ings": [{"k": "paleron", "q": 1200, "no": ""}, {"k": "carotte", "q": 4, "no": "en gros tronçons"}, {"k": "oignon", "q": 2, "no": "émincés"}, {"k": "ail", "q": 4, "no": ""}, {"k": "gingembre", "q": 4, "no": "râpé"}, {"k": "citronnelle", "q": 2, "no": ""}, {"k": "anis_etoile", "q": 2, "no": ""}, {"k": "cannelle", "q": 1, "no": ""}, {"k": "curry", "q": 2, "no": ""}, {"k": "concentre_tomate", "q": 70, "no": ""}, {"k": "sauce_poisson", "q": 3, "no": ""}, {"k": "sucre", "q": 15, "no": ""}, {"k": "bouillon", "q": 100, "no": ""}, {"k": "huile", "q": 2, "no": ""}], "etapes": [{"t": "Mélange {paleron} en cubes avec {curry}, {sauce_poisson}, {sucre}, {ail} et {gingembre}. Laisse mariner au moins 15 min (ou la veille)."}, {"t": "Dore la viande dans {huile} en 2 fournées.", "min": 10}, {"t": "Ajoute {oignon}, {concentre_tomate}, {citronnelle} écrasée et coupée en tronçons, {anis_etoile} et {cannelle}, puis {bouillon}. Couvre et laisse mijoter à feu doux.", "min": 90}, {"t": "Ajoute {carotte} et poursuis la cuisson jusqu'à ce que la viande soit fondante.", "min": 30}, {"t": "Retire la citronnelle et les épices entières avant de servir."}]}, {"id": "pad-thai", "titre": "Pad thaï au poulet", "desc": "Nouilles de riz sautées, œuf, germes de soja et cacahuètes.", "base": 6, "prep": 15, "cuisson": 10, "budget": 1, "frigo": 2, "congel": "Non", "tags": ["volaille", "asie", "pates", "rapide"], "acc": null, "fr": 1, "hue": 50, "astuce": "Le tamarin d'origine est remplacé par citron vert, sucre et vinaigre, plus faciles à trouver.", "ings": [{"k": "nouilles_riz", "q": 400, "no": ""}, {"k": "filet_poulet", "q": 500, "no": "en lanières"}, {"k": "oeuf", "q": 4, "no": ""}, {"k": "germes_soja", "q": 200, "no": ""}, {"k": "cacahuetes", "q": 80, "no": "concassées"}, {"k": "ciboule", "q": 1, "no": ""}, {"k": "ail", "q": 2, "no": ""}, {"k": "citron_vert", "q": 2, "no": ""}, {"k": "sauce_poisson", "q": 4, "no": ""}, {"k": "sucre", "q": 40, "no": ""}, {"k": "vinaigre", "q": 1, "no": ""}, {"k": "piment", "q": 0.5, "no": ""}, {"k": "huile", "q": 3, "no": ""}], "etapes": [{"t": "Fais tremper {nouilles_riz} dans de l'eau très chaude, puis égoutte.", "min": 10}, {"t": "Mélange {sauce_poisson}, {sucre}, le jus d'un {citron_vert}, {vinaigre} et {piment}."}, {"t": "Saisis {filet_poulet} dans {huile} avec {ail}. Pousse-le sur le côté et brouille {oeuf} dans la poêle.", "min": 5}, {"t": "Ajoute les nouilles et la sauce, puis fais sauter.", "min": 3}, {"t": "Ajoute {germes_soja} et {ciboule}, mélange 1 min, et sers avec {cacahuetes} et le reste du citron vert.", "min": 1}]}, {"id": "rendang-boeuf", "titre": "Rendang de bœuf", "desc": "Bœuf longuement mijoté dans le lait de coco et les épices, jusqu'à une sauce presque sèche.", "base": 6, "prep": 20, "cuisson": 150, "budget": 2, "frigo": 4, "congel": "Oui, très bien", "tags": ["boeuf", "asie"], "acc": "riz", "fr": 2, "hue": 14, "astuce": "Encore meilleur le lendemain, comme tous les plats mijotés.", "ings": [{"k": "paleron", "q": 1200, "no": ""}, {"k": "coco", "q": 80, "no": ""}, {"k": "oignon", "q": 3, "no": ""}, {"k": "ail", "q": 4, "no": ""}, {"k": "gingembre", "q": 5, "no": ""}, {"k": "citronnelle", "q": 2, "no": ""}, {"k": "curcuma", "q": 2, "no": ""}, {"k": "piment", "q": 2, "no": ""}, {"k": "coriandre_moulue", "q": 2, "no": ""}, {"k": "cannelle", "q": 1, "no": ""}, {"k": "sucre", "q": 15, "no": ""}, {"k": "huile", "q": 2, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Hache très finement (ou mixe) {oignon}, {ail}, {gingembre} et le blanc de {citronnelle}."}, {"t": "Fais revenir cette pâte dans {huile} avec {curcuma}, {piment} et {coriandre_moulue}.", "min": 5}, {"t": "Ajoute {paleron} en cubes et enrobe-le, puis {coco}, {cannelle}, {sucre} et le reste de la citronnelle en tronçons. Laisse mijoter à découvert à feu doux en remuant de temps en temps.", "min": 130}, {"t": "Remue souvent la fin de cuisson : la sauce doit réduire jusqu'à devenir épaisse et brune. Sale.", "min": 20}]}, {"id": "adobo-poulet", "titre": "Adobo de poulet", "desc": "Le plat national philippin : poulet mijoté au soja, vinaigre et ail.", "base": 6, "prep": 10, "cuisson": 45, "budget": 1, "frigo": 4, "congel": "Oui", "tags": ["volaille", "asie"], "acc": "riz", "fr": 1, "hue": 30, "astuce": "Le vinaigre perd son piquant à la cuisson : il reste une sauce douce et parfumée. Encore meilleur réchauffé.", "ings": [{"k": "cuisse_poulet", "q": 6, "no": ""}, {"k": "sauce_soja", "q": 12, "no": ""}, {"k": "vinaigre", "q": 8, "no": ""}, {"k": "ail", "q": 8, "no": ""}, {"k": "laurier", "q": 3, "no": ""}, {"k": "sucre", "q": 15, "no": ""}, {"k": "huile", "q": 1, "no": ""}, {"k": "sel", "q": null, "no": ""}], "etapes": [{"t": "Mets {cuisse_poulet}, {sauce_soja}, {vinaigre}, {ail} écrasé, {laurier} et 20 cl d'eau dans la cocotte. Laisse mariner 30 min si tu as le temps."}, {"t": "Porte à frémissement, couvre et laisse cuire.", "min": 30}, {"t": "Retire le poulet et fais-le dorer côté peau dans {huile} à la poêle.", "min": 8}, {"t": "Pendant ce temps, fais réduire la sauce avec {sucre} jusqu'à ce qu'elle épaississe, puis remets le poulet.", "min": 8}]}]);
+/* ================= État ================= */
+const LS="livre-recettes-v1";
+const st={adultes:2,enfants:1,mode:"jours",n:4,rpj:1,batch:2,accomp:true,sel:{},coches:{},stock:{},portions:{}};
+let hadLocal=false;
+try{const s=JSON.parse(localStorage.getItem(LS)||"null"); if(s){Object.assign(st,sanitize(s));hadLocal=true;}}catch(e){}
+let R={}; let ORDER=[];
+/* Source des recettes : le Google Sheet (privé), lu via un script Google Apps Script protégé par une clé */
+const CFG=window.APP_CONFIG||{};
+const SHEET_URL=CFG.sheet||"https://docs.google.com/spreadsheets/";
+const SRC_LS="livre-recettes-sheet-v1";
+let SHEET_RECS=null;
+let sheetState={status:"loading",code:"",at:0};
+let filt={q:"",tag:"tout",sort:"livre"};
+let ingGot={}; let cook=null; let wake=null; let confirmClear=false, clearT=null; let settingsOpen=null;
+let stateRef=null, saving=false, dirty=false, saveT=null;
+
+function sanitize(d){
+  const o={}; if(!d||typeof d!=="object") return o;
+  const n=(v,a,b)=>typeof v==="number"&&isFinite(v)?Math.min(b,Math.max(a,v)):undefined;
+  const set=(k,v)=>{if(v!==undefined)o[k]=v};
+  set("adultes",n(d.adultes,1,12)); set("enfants",n(d.enfants,0,10)); set("n",n(d.n,1,60));
+  set("rpj",n(d.rpj,1,2)); set("batch",n(d.batch,1,3));
+  if(["repas","jours","semaines"].includes(d.mode)) o.mode=d.mode;
+  if(typeof d.accomp==="boolean") o.accomp=d.accomp;
+  for(const k of ["sel","portions"]) if(d[k]&&typeof d[k]==="object"){o[k]={};for(const [a,b] of Object.entries(d[k])) if(typeof b==="number"&&b>=0&&b<=60) o[k][a]=b;}
+  for(const k of ["coches","stock"]) if(d[k]&&typeof d[k]==="object"){o[k]={};for(const [a,b] of Object.entries(d[k])) if(b===true) o[k][a]=true;}
+  return o;
+}
+function save(){
+  try{localStorage.setItem(LS,JSON.stringify(st))}catch(e){}
+  clearTimeout(saveT); saveT=setTimeout(flush,900);
+}
+async function flush(){
+  if(!stateRef) return;
+  if(saving){dirty=true;return;}
+  saving=true;
+  try{await stateRef.set(JSON.parse(JSON.stringify(st)));}
+  catch(e){ if(e&&e.code==="invalid_argument") stateRef=null; }
+  saving=false;
+  if(dirty){dirty=false;flush();}
+}
+function rebuild(){
+  R={}; ORDER=[];
+  (SHEET_RECS||BASE).forEach(r=>{ if(!R[r.id]) ORDER.push(r.id); R[r.id]=r; });
+}
+
+/* ================= Utilitaires ================= */
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function fr(x){
+  const w=Math.floor(x+1e-9), f=x-w;
+  if(Math.abs(f-0.5)<0.01) return (w?w+" ":"")+"½";
+  if(Math.abs(f-0.25)<0.01) return (w?w+" ":"")+"¼";
+  if(Math.abs(f-0.75)<0.01) return (w?w+" ":"")+"¾";
+  return String(Math.round(x*10)/10).replace(".",",");
+}
+function getIng(line){
+  const b=CAT[line.k]||{}; const m=Object.assign({},b);
+  ["n","s","sh","r","u","rd","dlc"].forEach(f=>{if(line[f]!=null&&line[f]!=="") m[f]=line[f];});
+  if(line.a) m.a=line.a;
+  if(!m.n) return null;
+  m.r=RAY[m.r]?m.r:"autre"; m.u=UNITS.includes(m.u)?m.u:"pc"; m.k=line.k;
+  return m;
+}
+function roundQ(q,ing){
+  const u=ing.u;
+  if(u==="g") return q<20?Math.max(1,Math.round(q)):Math.round(q/5)*5;
+  if(u==="cl") return q<10?Math.max(1,Math.round(q)):Math.round(q/5)*5;
+  if(u==="cas"||u==="cac") return Math.max(0.5,Math.round(q*2)/2);
+  if(ing.rd==="ceil") return Math.max(1,Math.ceil(q-0.05));
+  if(ing.rd==="half") return Math.max(0.5,Math.round(q*2)/2);
+  return Math.max(1,Math.round(q));
+}
+function fmtG(r){return r>=1000? fr(Math.round(r/100)/10)+" kg" : r+" g";}
+function fmtQ(q,ing){
+  if(ing.u==="selon"||q==null) return "au goût";
+  const r=roundQ(q,ing);
+  switch(ing.u){
+    case "g": return fmtG(r);
+    case "cl": return r>=100? fr(Math.round(r/10)/10)+" L" : r+" cl";
+    case "cac": { if(r>=3){const s=r/3; if(Math.abs(s*2-Math.round(s*2))<0.01) return fr(s)+" c. à s.";} return fr(r)+" c. à c."; }
+    case "cas": return fr(r)+" c. à s.";
+    case "gousse": return r+(r>1?" gousses":" gousse");
+    case "cm": return r+" cm";
+    case "botte": return fr(r)+(r>1?" bottes":" botte");
+    case "boite": return r+(r>1?" boîtes":" boîte");
+    default: return fr(r);
+  }
+}
+function ingName(ing,q){ if(ing.u==="pc"&&ing.s&&q!=null&&roundQ(q,ing)<=1) return ing.s; return ing.n; }
+const dur=m=>m>=60? Math.floor(m/60)+" h"+(m%60?" "+String(m%60).padStart(2,"0"):"") : m+" min";
+const eur=b=>"€".repeat(Math.max(1,Math.min(3,b||1)));
+const P=()=>st.adultes+st.enfants*0.5;
+function totalMeals(){ return st.mode==="repas"? st.n : st.mode==="jours"? st.n*st.rpj : st.n*7*st.rpj; }
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove("on"),2600);}
+
+/* ================= Planification & courses ================= */
+const isSide=r=>!!r&&(r.tags||[]).includes("accompagnement");
+function computePlan(){
+  const Pe=P(), rpj=st.mode==="repas"?1:st.rpj;
+  const all=Object.entries(st.sel).filter(([id,m])=>R[id]&&m>0);
+  const sel=all.filter(([id])=>!isSide(R[id]));
+  const sides=all.filter(([id])=>isSide(R[id])).map(([id,m])=>({id,meals:m,portions:Pe*m}));
+  const per=sel.map(([id,m])=>{const out=[];let rem=m;while(rem>0){const k=Math.min(st.batch,rem);out.push(k);rem-=k;}return {id,chunks:out};});
+  per.sort((a,b)=>(R[a.id].fr||3)-(R[b.id].fr||3));
+  const sessions=[]; let round=0, any=true;
+  while(any){ any=false; per.forEach(p=>{ if(p.chunks[round]!=null){ any=true; sessions.push({id:p.id,meals:p.chunks[round]}); } }); round++; }
+  let idx=0;
+  sessions.forEach(s=>{ s.start=idx; s.day=Math.floor(idx/rpj)+1; s.slot=rpj===2?(idx%2?"soir":"midi"):""; idx+=s.meals; s.endDay=Math.floor((idx-1)/rpj)+1; s.portions=Pe*s.meals; });
+  const items={};
+  const add=(ing,q,rid,frz)=>{
+    if(!ing||ing.nb) return;
+    const key=ing.k;
+    if(!items[key]) items[key]={ing,need:0,recs:new Set(),freeze:0,selon:ing.u==="selon"};
+    if(q!=null) items[key].need+=q;
+    items[key].recs.add(rid);
+    if(frz&&q) items[key].freeze+=q;
+  };
+  sessions.forEach(s=>{
+    const r=R[s.id], f=s.portions/(r.base||6);
+    s.freeze=false;
+    r.ings.forEach(line=>{
+      const ing=getIng(line); if(!ing) return;
+      const frz= ing.r==="viande" && s.day>(ing.dlc||3);
+      if(frz) s.freeze=true;
+      add(ing, line.q==null?null:line.q*f, r.id, frz);
+    });
+    if(st.accomp&&r.acc&&ACC[r.acc]){ const a=ACC[r.acc]; add(getIng({k:a.k}), s.portions*a.g, r.id, false); }
+  });
+  sides.forEach(sd=>{ const r=R[sd.id], f=sd.portions/(r.base||6);
+    r.ings.forEach(line=>{ const ing=getIng(line); if(ing) add(ing, line.q==null?null:line.q*f, r.id, false); }); });
+  return {sessions,sides,items:Object.values(items),covered:idx,T:totalMeals(),Pe};
+}
+function buyOf(it){
+  const ing=it.ing, q=it.need;
+  if(it.selon) return {txt:"au goût"};
+  if(ing.a&&ing.a.t>0){
+    const n=Math.max(1,Math.ceil(q/ing.a.t-0.08));
+    const rest=n*ing.a.t-q;
+    return {txt:n+" × "+ing.a.l, need:fmtQ(q,ing), rest: rest>ing.a.t*0.12? fmtQ(rest,Object.assign({},ing,{rd:"round"})) : ""};
+  }
+  if(ing.u==="g"){ const r=q<200?Math.ceil(q/10)*10:Math.ceil(q/50)*50; return {txt:fmtG(r)}; }
+  if(ing.u==="pc"){ const r=Math.max(1,Math.ceil(q-0.15)); return {txt:String(r)}; }
+  return {txt:fmtQ(q,ing)};
+}
+const eurF=v=>v.toFixed(2).replace(".",",")+" €";
+function unitPrice(ing){ if(!ing||ing.p==null) return null; if(ing.a&&ing.a.t>0) return ing.p/ing.a.t; if(ing.u==="g") return ing.p/1000; return ing.p; }
+function itemCost(it){
+  const ing=it.ing; if(ing.p==null||it.selon) return null;
+  const q=it.need;
+  if(ing.a&&ing.a.t>0) return Math.max(1,Math.ceil(q/ing.a.t-0.08))*ing.p;
+  if(ing.u==="g"){ const r=q<200?Math.ceil(q/10)*10:Math.ceil(q/50)*50; return r/1000*ing.p; }
+  if(ing.u==="pc") return Math.max(1,Math.ceil(q-0.15))*ing.p;
+  return q*ing.p;
+}
+function recipeCost(r){
+  let tot=0;
+  r.ings.forEach(l=>{ const ing=getIng(l); if(!ing||l.q==null) return; const up=unitPrice(ing); if(up!=null) tot+=l.q*up; });
+  if(r.acc&&ACC[r.acc]){ const ai=getIng({k:ACC[r.acc].k}); const up=unitPrice(ai); if(up!=null) tot+=r.base*ACC[r.acc].g*up; }
+  return tot/(r.base||6);
+}
+function costSummary(p){
+  let tot=0, none=0;
+  p.items.forEach(it=>{ if(st.stock[it.ing.k]||it.selon) return; const c=itemCost(it); if(c==null) none++; else tot+=c; });
+  const portions=p.sessions.reduce((a,s)=>a+s.portions,0);
+  return {tot,none,per:portions?tot/portions:0};
+}
+function listText(p){
+  const cs=costSummary(p);
+  const lines=["Liste de courses : "+p.covered+" repas, "+fr(p.Pe)+" portions par repas","Estimation Lidl : environ "+eurF(cs.tot)+" (hors épices et placard)",""];
+  RAYONS.forEach(([rk,rl])=>{
+    const its=p.items.filter(it=>it.ing.r===rk&&!st.stock[it.ing.k]&&!st.coches[it.ing.k]).sort((a,b)=>a.ing.n.localeCompare(b.ing.n,"fr"));
+    if(!its.length) return;
+    lines.push(rl.toUpperCase());
+    its.forEach(it=>lines.push("- "+it.ing.n+" : "+buyOf(it).txt));
+    lines.push("");
+  });
+  return lines.join("\n").trim();
+}
+
+/* ================= Rendu ================= */
+const app=document.getElementById("app");
+function route(){ const h=decodeURIComponent(location.hash.slice(1)); if(h.startsWith("r-")&&R[h.slice(2)]) return {v:"recette",id:h.slice(2)}; if(h==="courses") return {v:"courses"}; return {v:"liste"}; }
+function stepper(act,val,{min=0,max=99,id="",field="",label=""}={}){
+  return `<span class="stp" role="group" aria-label="${esc(label)}"><button type="button" data-act="${act}" data-d="-1" data-id="${esc(id)}" data-f="${field}" ${val<=min?"disabled":""} aria-label="Moins">−</button><output>${esc(fr(val))}</output><button type="button" data-act="${act}" data-d="1" data-id="${esc(id)}" data-f="${field}" ${val>=max?"disabled":""} aria-label="Plus">+</button></span>`;
+}
+function render(){
+  const r=route();
+  document.getElementById("tab-r").classList.toggle("on",r.v!=="courses");
+  document.getElementById("tab-c").classList.toggle("on",r.v==="courses");
+  const nSel=Object.entries(st.sel).filter(([id,m])=>R[id]).length;
+  document.getElementById("tab-badge").innerHTML=nSel?`<span class="badge">${nSel}</span>`:"";
+  if(r.v==="recette") renderRecette(R[r.id]);
+  else if(r.v==="courses") renderCourses();
+  else renderListe();
+}
+function recNo(id){return String(ORDER.indexOf(id)+1).padStart(2,"0");}
+function renderListe(){
+  const tags=[["tout","Tout"],["express","Express (30 min)"],["asie","Asie"],["accompagnement","Accompagnements"],["legumineuses","Légumineuses"],["pates","Pâtes"],["volaille","Volaille"],["boeuf","Bœuf"],["porc","Porc"],["poisson","Poisson"],["vege","Végé"],["rapide","Moins d'1 h"]];
+  app.innerHTML=`
+  <header class="hero"><span class="kicker" id="nrec">${ORDER.length} recettes · sans four</span><h1>Livre de recettes</h1><div id="src">${srcHTML()}</div></header>
+  <input class="search" id="q" type="search" placeholder="Chercher une recette ou un ingrédient" value="${esc(filt.q)}" aria-label="Chercher">
+  <div class="chips" id="chips">${tags.map(([k,l])=>`<button type="button" class="chip ${filt.tag===k?"on":""}" data-act="tag" data-id="${k}" aria-pressed="${filt.tag===k}">${l}</button>`).join("")}</div>
+  <div class="tools"><span class="small mut" id="count"></span><span class="spacer"></span><label class="small mut" for="tri">Trier</label><select class="tri" id="tri">${[["livre","Ordre du livre"],["rapide","Les plus rapides"],["prix","Les moins chères"],["az","De A à Z"]].map(([k,l])=>`<option value="${k}" ${filt.sort===k?"selected":""}>${l}</option>`).join("")}</select></div>
+  <div class="grid" id="grid"></div>
+  <p class="foot">Pour ajouter ou corriger une recette, modifie le <a href="${SHEET_URL}" target="_blank" rel="noopener">Google Sheet</a> (ou demande à Claude), puis touche Actualiser.</p>`;
+  renderGrid();
+}
+const norm=t=>String(t||"").toLowerCase().replace(/œ/g,"oe").replace(/æ/g,"ae").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+function prepNote(r){
+  const t=(r&&r.etapes&&r.etapes[0]&&r.etapes[0].t)||"";
+  if(/^La veille/i.test(t)&&/tremper/i.test(t)) return "mets les haricots à tremper";
+  if(/décongeler[^.]*la veille/i.test(t)) return "sors le poisson du congélateur et mets-le au frigo";
+  if(/^La veille/i.test(t)) return "une étape est à faire en avance";
+  return "";
+}
+function matches(r){
+  if(filt.tag!=="tout"){ if(filt.tag==="rapide"){ if((r.prep+r.cuisson)>60) return false; } else if(filt.tag==="express"){ if((r.prep+r.cuisson)>30) return false; } else if(!(r.tags||[]).includes(filt.tag)) return false; }
+  const q=norm(filt.q).trim(); if(!q) return true;
+  const hay=norm(r.titre+" "+(r.desc||"")+" "+r.ings.map(l=>{const i=getIng(l);return i?i.n:"";}).join(" "));
+  return q.split(/\s+/).every(w=>hay.includes(w));
+}
+function renderGrid(){
+  const g=document.getElementById("grid"); if(!g) return;
+  const list=ORDER.map(id=>R[id]).filter(matches);
+  if(filt.sort==="rapide") list.sort((a,b)=>(a.prep+a.cuisson)-(b.prep+b.cuisson));
+  else if(filt.sort==="prix") list.sort((a,b)=>recipeCost(a)-recipeCost(b));
+  else if(filt.sort==="az") list.sort((a,b)=>a.titre.localeCompare(b.titre,"fr"));
+  const c=document.getElementById("count"); if(c) c.textContent=list.length+(list.length>1?" recettes":" recette");
+  if(!list.length){g.innerHTML=`<div class="empty">Aucune recette ne correspond. Essaie un autre mot ou un autre filtre.</div>`;return;}
+  g.innerHTML=list.map(r=>{
+    const on=st.sel[r.id]!=null;
+    return `<article class="card" style="--h:${Number(r.hue)||20}">
+      <a class="card-top" href="#r-${esc(r.id)}"><span class="no">${recNo(r.id)}</span><h3>${esc(r.titre)}</h3><p>${esc(r.desc)}</p></a>
+      <div class="card-foot"><span class="pill num">${dur(r.prep+r.cuisson)}</span><span class="pill b num">≈ ${eurF(recipeCost(r))}/part</span>${isSide(r)?'<span class="pill">Accompagnement</span>':""}${(r.tags||[]).includes("vege")?'<span class="pill">Végé</span>':""}${prepNote(r)?'<span class="pill">À lancer la veille</span>':""}<span class="spacer"></span>
+      <button type="button" class="btn ${on?"on":""}" data-act="sel" data-id="${esc(r.id)}" aria-pressed="${on}">${on?"✓ Au menu":"+ Menu"}</button></div>
+    </article>`;}).join("");
+}
+function stepHTML(r,t,f){
+  return esc(t).replace(/\{([a-z0-9_]+)\}/g,(m,k)=>{
+    const line=r.ings.find(l=>l.k===k); if(!line) return m;
+    const ing=getIng(line); if(!ing) return "";
+    if(line.q==null) return `<span class="tok">${esc(ing.sh||ing.n)}</span>`;
+    return `<span class="tok">${esc(ing.sh||ing.n)} · ${esc(fmtQ(line.q*f,ing))}</span>`;
+  });
+}
+function renderRecette(r){
+  const por=st.portions[r.id]||r.base, f=por/r.base;
+  const got=ingGot[r.id]||{};
+  const on=st.sel[r.id]!=null;
+  const acc=r.acc&&ACC[r.acc];
+  app.innerHTML=`
+  <a class="back" href="#recettes">‹ Toutes les recettes</a>
+  <header class="rhead" style="--h:${Number(r.hue)||20}"><span class="no">Recette ${recNo(r.id)}</span><h1>${esc(r.titre)}</h1><p>${esc(r.desc)}</p></header>
+  <div class="facts">
+    <div><span>Prépa</span><b class="num">${dur(r.prep)}</b></div>
+    <div><span>Cuisson</span><b class="num">${dur(r.cuisson)}</b></div>
+    <div><span>Coût / part${r.acc&&ACC[r.acc]?" avec "+ACC[r.acc].l.toLowerCase():""}</span><b class="num">≈ ${eurF(recipeCost(r))}</b></div>
+    <div><span>Frigo</span><b class="num">${esc(r.frigo)} jours</b></div>
+    <div><span>Congélation</span><b>${esc(r.congel)}</b></div>
+  </div>
+  ${prepNote(r)?`<p class="note warn" style="margin:0"><b>À prévoir la veille :</b> ${esc(prepNote(r))}.</p>`:""}
+  <div class="row"><button type="button" class="btn pri" data-act="cook" data-id="${esc(r.id)}">▶ Mode cuisine</button>
+  <button type="button" class="btn ${on?"on":""}" data-act="sel" data-id="${esc(r.id)}" aria-pressed="${on}">${on?"✓ Au menu":"+ Ajouter au menu"}</button></div>
+  <section class="panel">
+    <div class="panel-h"><h2>Ingrédients</h2><div class="row"><span class="mut small">Portions</span>${stepper("por",por,{min:0.5,max:30,id:r.id,label:"Nombre de portions (par demi-portion)"})}</div></div>
+    <ul class="ings">${r.ings.map((l,i)=>{const ing=getIng(l); if(!ing) return ""; const q=l.q==null?null:l.q*f; return `<li class="${got[i]?"got":""}" data-act="got" data-id="${esc(r.id)}" data-f="${i}"><button type="button" class="box ${got[i]?"on":""}" aria-label="J'ai ${esc(ing.n)}" aria-pressed="${!!got[i]}"></button><span class="q">${esc(fmtQ(q,ing))}</span><span class="nm">${esc(ingName(ing,q))}${l.no?`<small>${esc(l.no)}</small>`:""}</span></li>`;}).join("")}</ul>
+    ${acc?`<p class="acc">À servir avec : <b>${acc.l}</b>, ${esc(fmtG(Math.round(por*acc.g/10)*10))} pour ${fr(por)} portions (${acc.txt}).</p>`:""}
+  </section>
+  <section class="panel">
+    <h2>Étapes</h2>
+    <ol class="steps">${r.etapes.map((e,i)=>`<li><div><p>${stepHTML(r,e.t,f)}</p>${e.min?`<button type="button" class="tmr" data-act="timer" data-id="${esc(r.id)}" data-f="${i}">⏱ Minuteur ${dur(e.min)}</button>`:""}</div></li>`).join("")}</ol>
+  </section>
+  ${r.astuce?`<aside class="tip"><b>Astuce.</b> ${esc(r.astuce)}</aside>`:""}`;
+}
+function renderCourses(){
+  const p=computePlan();
+  const sel=ORDER.filter(id=>st.sel[id]!=null);
+  const maxN=st.mode==="semaines"?8:st.mode==="jours"?31:60;
+  const pct=p.T?Math.min(100,Math.round(p.covered/p.T*100)):0;
+  const diff=p.T-p.covered;
+  const unitL=st.mode==="repas"?"repas":st.mode==="jours"?(st.n>1?"jours":"jour"):(st.n>1?"semaines":"semaine");
+  const nPers=`${st.adultes} adulte${st.adultes>1?"s":""}${st.enfants?`, ${st.enfants} enfant${st.enfants>1?"s":""}`:""}`;
+  const durL=`${st.n} ${unitL}`+(st.mode!=="repas"?`, ${st.rpj} plat${st.rpj>1?"s":""} par jour`:"");
+  const setOpen=settingsOpen==null?!sel.length:settingsOpen;
+  let html=`<header class="hero"><h1>Menu et courses</h1>${sel.length?"":`<p class="mut">Choisis tes plats, dis combien de temps les courses doivent tenir, la liste se calcule toute seule.</p>`}</header>
+  <section class="panel">
+    <div class="panel-h" style="flex-wrap:nowrap;align-items:flex-start"><div style="flex:1;min-width:0"><h2>Réglages</h2>${setOpen?"":`<p class="small mut" style="margin:4px 0 0">${nPers} · ${durL} · ${p.T} repas à cuisiner</p>`}</div><button type="button" class="btn ghost" data-act="settings" aria-expanded="${setOpen}">${setOpen?"Replier":"Modifier"}</button></div>
+    ${setOpen?`<h3>Pour qui ?</h3>
+    <div class="field"><label>Adultes<small>1 portion chacun</small></label>${stepper("inc",st.adultes,{min:1,max:12,field:"adultes",label:"Adultes"})}</div>
+    <div class="field"><label>Enfants<small>½ portion chacun</small></label>${stepper("inc",st.enfants,{min:0,max:10,field:"enfants",label:"Enfants"})}</div>
+    <h3 style="margin-top:6px">Les courses doivent tenir</h3>
+    <div class="seg" role="group" aria-label="Unité">${[["repas","Repas"],["jours","Jours"],["semaines","Semaines"]].map(([k,l])=>`<button type="button" class="${st.mode===k?"on":""}" data-act="mode" data-id="${k}" aria-pressed="${st.mode===k}">${l}</button>`).join("")}</div>
+    <div class="field"><label>Durée<small>${st.mode==="repas"?"repas principaux à couvrir":"nombre de "+unitL}</small></label>${stepper("inc",st.n,{min:1,max:maxN,field:"n",label:"Durée"})}</div>
+    ${st.mode!=="repas"?`<div class="field" style="flex-direction:column;align-items:stretch"><label>Plats cuisinés par jour<small>le reste : sandwichs, cantine…</small></label><div class="seg two">${[1,2].map(v=>`<button type="button" class="${st.rpj===v?"on":""}" data-act="rpj" data-id="${v}">${v===1?"1 (soir)":"2 (midi + soir)"}</button>`).join("")}</div></div>`:""}
+    <div class="field"><label>Un plat cuisiné couvre<small>2 = tu manges les restes le lendemain</small></label>${stepper("inc",st.batch,{min:1,max:3,field:"batch",label:"Repas par plat"})}</div>
+    <div class="field"><label>Inclure riz et pâtes<small>dans la liste de courses</small></label><button type="button" class="box ${st.accomp?"on":""}" data-act="accomp" aria-pressed="${st.accomp}" aria-label="Inclure les accompagnements"></button></div>
+    <div class="sum"><b>${p.T}</b><span>repas × ${fr(p.Pe)} portions = <b style="font-size:1.1rem">${fr(p.T*p.Pe)}</b> portions à cuisiner</span></div>`:""}
+  </section>
+  <section class="panel">
+    <div class="panel-h"><h2>Le menu</h2>${sel.length?`<button type="button" class="btn ghost" data-act="spread">Répartir les ${p.T} repas</button>`:""}</div>
+    ${sel.length?(confirmClear?`<div class="row note warn" style="margin:0"><span style="flex:1">Retirer les ${sel.length} plats du menu et décocher la liste ?</span><button type="button" class="btn pri" data-act="clearmenu">Oui, tout retirer</button><button type="button" class="btn ghost" data-act="cancelclear">Annuler</button></div>`:`<button type="button" class="btn ghost" style="align-self:flex-start" data-act="clearmenu">Vider le menu</button>`):""}`;
+  if(!sel.length){
+    html+=`<div class="empty">Aucun plat au menu pour l'instant.<br><a href="#recettes" class="btn pri" style="margin-top:10px">Choisir des recettes</a></div>`;
+  } else {
+    html+=`<div class="bar ${diff<0?"over":""}"><i style="width:${pct}%"></i></div>
+    <p class="small ${diff?"":"mut"}" style="margin:0">${p.covered} repas sur ${p.T} couverts${diff>0?` : il en manque ${diff}, ajoute un plat ou monte un compteur.`:diff<0?` : ${-diff} repas en trop, il y aura du rab.`:" : c'est tout bon."}</p>
+    <ul class="menu">${sel.map(id=>{const r=R[id];const m=st.sel[id];const cooks=Math.ceil(m/st.batch);return `<li><div class="t"><a href="#r-${esc(id)}">${esc(r.titre)}</a><small>${isSide(r)?(m?`accompagnement · servi sur ${m} repas · ${fr(P()*m)} portions`:"accompagnement · 0 repas"):(m?`${fr(P()*m)} portions · cuisiné ${cooks} fois`:"0 repas : non compté")}</small></div>${stepper("meal",m,{min:0,max:30,id,label:"Repas"})}<button type="button" class="x" data-act="sel" data-id="${esc(id)}" aria-label="Retirer ${esc(r.titre)}">×</button></li>`;}).join("")}</ul>
+    <a href="#recettes" class="btn ghost" style="align-self:flex-start">+ Ajouter un plat</a>`;
+  }
+  html+=`</section>`;
+  if(p.sessions.length||p.sides.length){
+    const dayL=s=>st.mode==="repas"?`Repas ${s.start+1}`:`Jour ${s.day}${s.slot?" "+s.slot:""}`;
+    const anyFreeze=p.sessions.some(s=>s.freeze);
+    html+=`<section class="panel"><h2>Ordre conseillé</h2><p class="small mut" style="margin:0">Les viandes les plus fragiles d'abord (volaille, haché), les plats qui se gardent le mieux à la fin.</p>
+    <ol class="plan">${p.sessions.map(s=>{const r=R[s.id];const range=st.mode==="repas"?(s.meals>1?`repas ${s.start+1} à ${s.start+s.meals}`:""):(s.endDay>s.day?`jours ${s.day} à ${s.endDay}`:"");return `<li><span class="d">${dayL(s)}</span><div><b>${esc(r.titre)}</b><small>${fr(s.portions)} portions${range?" · "+range:""}</small>${prepNote(r)?`<span class="eve">La veille : ${esc(prepNote(r))}</span>`:""}${s.freeze?`<span class="frz">❄ viande à congeler à l'achat, à décongeler la veille au frigo</span>`:""}</div></li>`;}).join("")}</ol>
+    ${p.sides.length?`<p class="small" style="margin:0"><b>À préparer à côté :</b> ${p.sides.map(sd=>esc(R[sd.id].titre)+" ("+fr(sd.portions)+" portions"+(prepNote(R[sd.id])?", à lancer la veille":"")+")").join(", ")}. Les accompagnements ne comptent pas comme des repas.</p>`:""}
+    ${anyFreeze?`<p class="note cold" style="margin:0">La viande fraîche se garde 2 à 3 jours au frigo. Congèle dès le retour des courses celle des plats prévus plus tard (elle est signalée ❄ dans la liste), ou fais une deuxième petite course à mi-parcours.</p>`:""}</section>`;
+    html+=renderList(p);
+  }
+  app.innerHTML=html;
+}
+function renderList(p){
+  const visible=p.items.filter(it=>!st.stock[it.ing.k]);
+  const stocked=p.items.filter(it=>st.stock[it.ing.k]);
+  const done=visible.filter(it=>st.coches[it.ing.k]).length;
+  const shared=p.items.filter(it=>it.recs.size>1&&it.ing.r!=="epices").length;
+  let h=`<section class="panel"><div class="panel-h"><h2>Liste de courses</h2><span class="mut small num">${done}/${visible.length} pris</span></div>
+  ${(()=>{const cs=costSummary(p);return `<div class="sum"><b>≈ ${eurF(cs.tot)}</b><span>chez Lidl, soit ≈ ${eurF(cs.per)} la portion (paquets entiers compris)</span></div><p class="small mut" style="margin:0">Prix indicatifs (relevés Lidl et estimations, détaillés dans l'onglet Catalogue du Sheet), hors épices, huile et condiments${cs.none?` (${cs.none} article${cs.none>1?"s":""} non chiffré${cs.none>1?"s":""})`:""}. Les articles « J'en ai toujours » ne sont pas comptés.</p>`;})()}
+  ${shared?`<p class="note warn" style="margin:0">${shared} ingrédients servent à plusieurs plats : leurs quantités sont regroupées, tu achètes moins de paquets entamés.</p>`:""}
+  <div class="row"><button type="button" class="btn pri" data-act="copy">Copier la liste</button>${done?`<button type="button" class="btn ghost" data-act="uncheck">Tout décocher</button>`:""}</div>
+  <div id="copybox"></div>`;
+  RAYONS.forEach(([rk,rl])=>{
+    const its=visible.filter(it=>it.ing.r===rk); if(!its.length) return;
+    its.sort((a,b)=>a.ing.n.localeCompare(b.ing.n,"fr"));
+    h+=`<div class="ray"><h3>${rl}</h3><ul class="items">${its.map(it=>{
+      const b=buyOf(it), k=it.ing.k, on=!!st.coches[k];
+      const recs=[...it.recs].map(id=>R[id]?R[id].titre:"").filter(Boolean);
+      const subs=[];
+      if(b.need) subs.push("besoin "+esc(b.need));
+      if(b.rest) subs.push("reste ≈ "+esc(b.rest));
+      const ic=itemCost(it);
+      subs.push(esc(recs.length>1?recs.length+" plats":recs.join(", ")));
+      return `<li class="item ${on?"done":""}" data-act="chk" data-id="${esc(k)}"><button type="button" class="box ${on?"on":""}" aria-pressed="${on}" aria-label="Pris : ${esc(it.ing.n)}"></button><span class="nm">${esc(it.ing.n)}</span><span class="pr">${ic!=null?"≈ "+eurF(ic):""}</span><div class="sub"><b class="bq">${esc((it.ing.u==="pc"&&!(it.ing.a&&it.ing.a.t>0)&&!it.selon?"× ":"")+b.txt)}</b>${subs.map(s=>`<span>${s}</span>`).join("")}${it.freeze>0?`<span class="frz">❄ dont ${esc(fmtQ(it.freeze,it.ing))} à congeler</span>`:""}<button type="button" class="have" data-act="stock" data-id="${esc(k)}">J'en ai toujours</button></div></li>`;}).join("")}</ul></div>`;
+  });
+  if(stocked.length) h+=`<details class="stock"><summary>Toujours chez toi (${stocked.length}), retirés de la liste</summary><ul class="items">${stocked.map(it=>`<li class="item"><span></span><span class="nm">${esc(it.ing.n)}</span><span class="pr"></span><div class="sub"><b class="bq mut">${esc(buyOf(it).txt)}</b><button type="button" class="have" data-act="stock" data-id="${esc(it.ing.k)}">Remettre dans la liste</button></div></li>`).join("")}</ul></details>`;
+  h+=`</section>`;
+  return h;
+}
+
+/* ================= Mode cuisine ================= */
+const cookEl=document.getElementById("cook");
+function openCook(id){ cook={id,i:0}; cookEl.hidden=false; renderCook(); try{ if(navigator.wakeLock) navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{}); }catch(e){} }
+function closeCook(){ cook=null; cookEl.hidden=true; try{wake&&wake.release();}catch(e){} wake=null; }
+function renderCook(){
+  if(!cook) return;
+  const r=R[cook.id]; if(!r){closeCook();return;}
+  const f=(st.portions[r.id]||r.base)/r.base, n=r.etapes.length, e=r.etapes[cook.i];
+  cookEl.innerHTML=`<div class="ck-top"><h2>${esc(r.titre)} · ${fr((st.portions[r.id]||r.base))} portions</h2><button type="button" class="btn" data-act="cookclose">Fermer</button></div>
+  <div class="ck-prog">${r.etapes.map((_,i)=>`<i class="${i<=cook.i?"on":""}"></i>`).join("")}</div>
+  <div id="ck-timers"></div>
+  <div class="ck-body">
+    <span class="ck-n">Étape ${cook.i+1} sur ${n}</span>
+    <p class="ck-t" style="margin:0">${stepHTML(r,e.t,f)}</p>
+    ${e.min?`<button type="button" class="btn pri" style="align-self:flex-start" data-act="timer" data-id="${esc(r.id)}" data-f="${cook.i}">⏱ Lancer ${dur(e.min)}</button>`:""}
+    <details class="ck-ing"><summary>Voir tous les ingrédients</summary><ul class="ings">${r.ings.map(l=>{const ing=getIng(l);if(!ing)return"";const q=l.q==null?null:l.q*f;return `<li><span></span><span class="q">${esc(fmtQ(q,ing))}</span><span class="nm">${esc(ingName(ing,q))}</span></li>`;}).join("")}</ul></details>
+  </div>
+  <div class="ck-nav"><button type="button" class="btn" data-act="ckprev" ${cook.i===0?"disabled":""}>‹ Précédente</button>
+  ${cook.i<n-1?`<button type="button" class="btn pri" data-act="cknext">Étape suivante ›</button>`:`<button type="button" class="btn pri" data-act="cookclose">Terminé, bon appétit</button>`}</div>`;
+  renderTimers();
+}
+
+/* ================= Minuteurs ================= */
+let timers=[], actx=null;
+const tEl=document.getElementById("timers");
+function startTimer(label,min){
+  try{ if(!actx){const A=window.AudioContext||window.webkitAudioContext; if(A) actx=new A();} if(actx&&actx.resume) actx.resume().catch(()=>{}); }catch(e){}
+  const tm={id:Math.random().toString(36).slice(2),label,end:Date.now()+min*60000,done:false};
+  timers.push(tm); try{ window.Native&&Native.scheduleTimer(tm); }catch(e){}
+  renderTimers(); toast("Minuteur lancé : "+dur(min));
+}
+function renderTimers(){
+  const th=timers.map(t=>{const left=Math.max(0,Math.round((t.end-Date.now())/1000));const mm=Math.floor(left/60),ss=String(left%60).padStart(2,"0");
+    return `<div class="timer ${t.done?"done":""}"><b>${t.done?"Fini":mm+":"+ss}</b><span>${esc(t.label)}</span><button type="button" data-act="tstop" data-id="${t.id}" aria-label="Arrêter le minuteur">✕</button></div>`;}).join("");
+  tEl.innerHTML=th; const ck=document.getElementById("ck-timers"); if(ck) ck.innerHTML=th;
+}
+function ring(label){
+  try{navigator.vibrate&&navigator.vibrate([300,150,300,150,300]);}catch(e){}
+  try{ if(actx){ for(let i=0;i<4;i++){const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;o.connect(g);g.connect(actx.destination);const t0=actx.currentTime+i*0.45;g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(0.35,t0+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+0.35);o.start(t0);o.stop(t0+0.37);} } }catch(e){}
+  toast("⏰ "+label+" : c'est prêt");
+}
+setInterval(()=>{ if(!timers.length) return; timers.forEach(t=>{ if(!t.done&&Date.now()>=t.end){t.done=true;ring(t.label);} }); renderTimers(); },1000);
+tEl.addEventListener("click",e=>{const b=e.target.closest("[data-act=tstop]"); if(b){ try{ window.Native&&Native.cancelTimer(b.dataset.id); }catch(e){} timers=timers.filter(t=>t.id!==b.dataset.id);renderTimers();}});
+
+/* ================= Interactions ================= */
+function handle(e){
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const act=b.dataset.act, id=b.dataset.id, d=Number(b.dataset.d||0), fld=b.dataset.f;
+  const lims={adultes:[1,12],enfants:[0,10],n:[1,st.mode==="semaines"?8:st.mode==="jours"?31:60],batch:[1,3]};
+  switch(act){
+    case "tag": filt.tag=id; app.querySelectorAll(".chip").forEach(c=>{ const o=c.dataset.id===id; c.classList.toggle("on",o); c.setAttribute("aria-pressed",o); }); renderGrid(); return;
+    case "settings": { const auto=!ORDER.some(i=>st.sel[i]!=null); settingsOpen=!(settingsOpen==null?auto:settingsOpen); render(); return; }
+    case "tstop": timers=timers.filter(t=>t.id!==id); renderTimers(); return;
+    case "sel": {
+      if(st.sel[id]!=null){ delete st.sel[id]; toast("Retiré du menu"); }
+      else if(isSide(R[id])){ st.sel[id]=Math.min(st.batch,Math.max(1,totalMeals())); toast("Accompagnement ajouté au menu"); }
+      else { const p=computePlan(); const left=p.T-p.covered; st.sel[id]=left>0?Math.min(st.batch,left):st.batch; toast("Ajouté au menu"); }
+      save(); render(); return; }
+    case "por": { const r=R[id]; const v=(st.portions[id]||r.base)+d*0.5; st.portions[id]=Math.max(0.5,Math.min(30,Math.round(v*2)/2)); save(); render(); return; }
+    case "got": { ingGot[id]=ingGot[id]||{}; ingGot[id][fld]=!ingGot[id][fld]; render(); return; }
+    case "inc": { const [a,z]=lims[fld]; st[fld]=Math.max(a,Math.min(z,st[fld]+d)); save(); render(); return; }
+    case "mode": { st.mode=id; const z=id==="semaines"?8:id==="jours"?31:60; if(id==="semaines"&&st.n>4) st.n=1; if(id==="repas"&&st.n<3) st.n=6; st.n=Math.min(st.n,z); save(); render(); return; }
+    case "rpj": st.rpj=Number(id); save(); render(); return;
+    case "accomp": st.accomp=!st.accomp; save(); render(); return;
+    case "meal": st.sel[id]=Math.max(0,Math.min(30,(st.sel[id]||0)+d)); save(); render(); return;
+    case "spread": {
+      const ids=ORDER.filter(i=>st.sel[i]!=null&&!isSide(R[i])).sort((a,b)=>(R[a].fr||3)-(R[b].fr||3));
+      const T=totalMeals(), k=ids.length; if(!k) return; const base=Math.floor(T/k); let rem=T-base*k;
+      ids.forEach(i=>{st.sel[i]=base+(rem>0?1:0); if(rem>0) rem--;});
+      save(); render(); toast(T+" repas répartis sur "+k+" plats"); return; }
+    case "clearmenu":
+      if(!confirmClear){ confirmClear=true; render(); clearTimeout(clearT); clearT=setTimeout(()=>{ if(confirmClear){ confirmClear=false; if(route().v==="courses") render(); } },6000); return; }
+      confirmClear=false; clearTimeout(clearT); st.sel={}; st.coches={}; save(); render(); toast("Menu vidé"); return;
+    case "cancelclear": confirmClear=false; clearTimeout(clearT); render(); return;
+    case "chk": if(st.coches[id]) delete st.coches[id]; else st.coches[id]=true; save(); render(); return;
+    case "uncheck": st.coches={}; save(); render(); return;
+    case "stock": if(st.stock[id]) delete st.stock[id]; else { st.stock[id]=true; delete st.coches[id]; } save(); render(); return;
+    case "copy": {
+      const txt=listText(computePlan());
+      const fallback=()=>{const box=document.getElementById("copybox"); if(box){box.innerHTML=`<p class="small mut" style="margin:0 0 6px">Copie automatique refusée : sélectionne le texte ci-dessous.</p><textarea class="copy" readonly>${esc(txt)}</textarea>`; const ta=box.querySelector("textarea"); ta.focus(); ta.select();}};
+      try{ navigator.clipboard.writeText(txt).then(()=>toast("Liste copiée, colle-la où tu veux"),fallback); }catch(err){ fallback(); }
+      return; }
+    case "sheet": fetchSheet(true); return;
+    case "cook": openCook(id); return;
+    case "cookclose": closeCook(); return;
+    case "cknext": cook.i++; renderCook(); return;
+    case "ckprev": cook.i=Math.max(0,cook.i-1); renderCook(); return;
+    case "timer": { const r=R[id]; const e2=r&&r.etapes[Number(fld)]; if(e2&&e2.min) startTimer("Étape "+(Number(fld)+1)+" · "+r.titre,e2.min); return; }
+  }
+}
+app.addEventListener("click",handle);
+cookEl.addEventListener("click",handle);
+cookEl.addEventListener("click",e=>{const b=e.target.closest("[data-act=tstop]"); if(b){ try{ window.Native&&Native.cancelTimer(b.dataset.id); }catch(e){} timers=timers.filter(t=>t.id!==b.dataset.id);renderTimers();}});
+app.addEventListener("input",e=>{ if(e.target.id==="q"){ filt.q=e.target.value; renderGrid(); } });
+app.addEventListener("change",e=>{ if(e.target.id==="tri"){ filt.sort=e.target.value; renderGrid(); } });
+let lastView=route().v, listY=0;
+window.addEventListener("scroll",()=>{ if(lastView==="liste") listY=window.scrollY; },{passive:true});
+window.addEventListener("hashchange",()=>{ const v=route().v, back=v==="liste"&&lastView!=="liste"; lastView=v; render(); window.scrollTo(0,back?listY:0); });
+
+rebuild(); render();
+window.AppHooks={ isCookOpen:()=>!!cook, closeCook:()=>closeCook(), toast:t=>toast(t) };
+
+/* ================= Données synchronisées ================= */
+function str(v){return typeof v==="string"?v:"";}
+function num(v,d){return typeof v==="number"&&isFinite(v)?v:d;}
+function cleanRecipe(id,d){
+  if(!/^[a-z0-9-]{2,60}$/.test(id)) return null;
+  if(!d||typeof d.titre!=="string"||!Array.isArray(d.ings)||!Array.isArray(d.etapes)) return null;
+  const ings=d.ings.filter(l=>l&&typeof l.k==="string"&&/^[a-z0-9_]{1,40}$/.test(l.k)).map(l=>{
+    const o={k:l.k,q:typeof l.q==="number"&&isFinite(l.q)?l.q:null,no:str(l.no)};
+    ["n","s","sh"].forEach(f=>{if(str(l[f])) o[f]=str(l[f]);});
+    if(RAY[l.r]) o.r=l.r; if(UNITS.includes(l.u)) o.u=l.u; if(["ceil","half","round"].includes(l.rd)) o.rd=l.rd;
+    if(typeof l.dlc==="number") o.dlc=l.dlc;
+    if(l.a&&typeof l.a.t==="number"&&l.a.t>0&&typeof l.a.l==="string") o.a={t:l.a.t,l:l.a.l};
+    return o;}).filter(l=>getIng(l));
+  const etapes=d.etapes.map(e=>typeof e==="string"?{t:e}:{t:str(e&&e.t),min:num(e&&e.min,0)}).filter(e=>e.t);
+  if(!ings.length||!etapes.length) return null;
+  return {id,titre:d.titre.slice(0,120),desc:str(d.desc).slice(0,240),base:Math.max(1,num(d.base,6)),prep:num(d.prep,0),cuisson:num(d.cuisson,0),budget:num(d.budget,1),frigo:num(d.frigo,3),congel:str(d.congel)||"Oui",
+    tags:Array.isArray(d.tags)?d.tags.filter(t=>typeof t==="string"):[],acc:ACC[d.acc]?d.acc:null,fr:num(d.fr,3),hue:num(d.hue,210),astuce:str(d.astuce),ings,etapes};
+}
+/* ================= Lecture du Google Sheet ================= */
+const toNum=v=>{ if(v==null) return null; const t=String(v).replace(/[^0-9,.\-]/g,"").replace(",","."); if(t==="") return null; const n=Number(t); return isFinite(n)?n:null; };
+function rowsToObjs(rows){
+  if(!Array.isArray(rows)||!rows.length) return [];
+  const h=rows[0].map(c=>String(c==null?"":c).trim());
+  return rows.slice(1).filter(r=>Array.isArray(r)&&r.some(c=>String(c==null?"":c).trim())).map(r=>Object.fromEntries(h.map((k,i)=>[k,String(r[i]==null?"":r[i]).trim()])));
+}
+function buildFromSheet(raw){
+  const cat={};
+  rowsToObjs(raw.cat).forEach(o=>{
+    if(!/^[a-z0-9_]{1,40}$/.test(o.cle||"")||!o.nom) return;
+    const c={n:o.nom,r:RAY[o.rayon]?o.rayon:"autre",u:UNITS.includes(o.unite)?o.unite:"pc"};
+    if(o.nom_singulier) c.s=o.nom_singulier; if(o.nom_court) c.sh=o.nom_court;
+    if(["ceil","half","round"].includes(o.arrondi)) c.rd=o.arrondi;
+    const d=toNum(o.conservation_jours); if(d) c.dlc=d;
+    const t=toNum(o.conditionnement_taille); if(t&&o.conditionnement_libelle) c.a={t,l:o.conditionnement_libelle};
+    if(/^oui$/i.test(o.non_achete||"")) c.nb=true;
+    const pr=toNum(o.prix_lidl_eur); if(pr!=null&&pr>0) c.p=pr;
+    cat[o.cle]=c;
+  });
+  if(!Object.keys(cat).length) return null;
+  const ings={}, etas={};
+  rowsToObjs(raw.ing).forEach(o=>{ if(!o.recette_id||!o.ingredient_cle) return; (ings[o.recette_id]=ings[o.recette_id]||[]).push({ord:toNum(o.ordre)||0,k:o.ingredient_cle,q:toNum(o.quantite),no:o.note||""}); });
+  rowsToObjs(raw.eta).forEach(o=>{ if(!o.recette_id||!o.texte) return; (etas[o.recette_id]=etas[o.recette_id]||[]).push({ord:toNum(o.numero)||0,t:o.texte,min:toNum(o.minuteur_min)||0}); });
+  const prevCat=CAT; CAT=cat;
+  const recs=[];
+  rowsToObjs(raw.rec).forEach(o=>{
+    const nz=v=>{const n=toNum(v);return n==null?undefined:n;};
+    const r=cleanRecipe(o.id||"",{titre:o.titre,desc:o.description,base:nz(o.portions_base),prep:nz(o.prepa_min),cuisson:nz(o.cuisson_min),budget:nz(o.budget_1a3),frigo:nz(o.frigo_jours),congel:o.congelation,
+      tags:(o.tags||"").split(",").map(x=>x.trim()).filter(Boolean),acc:o.accompagnement,fr:nz(o.ordre_fraicheur),hue:nz(o.couleur),astuce:o.astuce,
+      ings:(ings[o.id]||[]).sort((a,b)=>a.ord-b.ord).map(({k,q,no})=>({k,q,no})),
+      etapes:(etas[o.id]||[]).sort((a,b)=>a.ord-b.ord).map(({t,min})=>({t,min}))});
+    if(r) recs.push(r);
+  });
+  if(!recs.length){ CAT=prevCat; return null; }
+  return recs;
+}
+function applySheet(raw,at){
+  const recs=buildFromSheet(raw);
+  if(!recs){ sheetState={status:"err",code:"empty",at:0}; return false; }
+  SHEET_RECS=recs; sheetState.at=at||Date.now(); rebuild(); return true;
+}
+function dropSheet(){ SHEET_RECS=null; CAT=CAT_EMBED; try{localStorage.removeItem(SRC_LS)}catch(e){} rebuild(); }
+function valuesOf(p){
+  if(typeof p==="string"){ try{p=JSON.parse(p);}catch(e){return null;} }
+  if(p&&Array.isArray(p.values)) return p.values;
+  if(p&&typeof p==="object"&&p.range&&!p.values) return [];
+  return null;
+}
+function hhmm(t){ const d=new Date(t); return String(d.getHours()).padStart(2,"0")+"h"+String(d.getMinutes()).padStart(2,"0"); }
+function srcHTML(){
+  const s=sheetState, open=`<a class="btn ghost" href="${SHEET_URL}" target="_blank" rel="noopener">Ouvrir le Sheet</a>`;
+  const again=label=>`<button type="button" class="btn" data-act="sheet">${label}</button>`;
+  if(s.status==="ok") return `<p class="src ok"><span class="dot"></span><span>Lu dans Google Sheets à ${hhmm(s.at)} ${again("Actualiser")} ${open}</span></p>`;
+  if(s.status==="loading") return `<p class="src"><span class="dot"></span><span>${SHEET_RECS?"Copie du "+hhmm(s.at)+" affichée, lecture du Google Sheet…":"Lecture du Google Sheet…"}</span></p>`;
+  const msg={
+    noconfig:"L'adresse du Sheet n'est pas configurée dans cette version de l'app.",
+    offline:"Pas de réseau.",
+    forbidden:"Le script du Sheet refuse la clé de l'app. Vérifie la clé dans le script Apps Script.",
+    badjson:"Le script du Sheet a répondu quelque chose d'inattendu. Vérifie qu'il est déployé en « Application Web », accès « Tout le monde ».",
+    tool_error:"Google n'a pas pu lire le Sheet. Vérifie que les onglets Recettes, Ingrédients, Étapes et Catalogue existent toujours.",
+    empty:"Le Sheet ne contient aucune recette complète (il faut au moins un ingrédient et une étape par recette)."
+  }[s.code]||"Le Sheet ne répond pas pour l'instant.";
+  return `<p class="src err"><span class="dot"></span><span>${esc(msg)} ${SHEET_RECS?"Dernière copie du "+hhmm(s.at)+" affichée.":"Copie intégrée affichée."} ${again("Réessayer")}</span></p>`;
+}
+function rerender(){
+  if(cook){ renderCook(); return; }
+  if(route().v!=="liste"){ render(); return; }
+  const box=document.getElementById("src");
+  if(!box){ renderListe(); return; }
+  box.innerHTML=srcHTML(); const n=document.getElementById("nrec"); if(n) n.textContent=ORDER.length+" recettes · sans four"; renderGrid();
+}
+let fetching=false;
+async function fetchSheet(refresh){
+  if(!CFG.api||!CFG.key){ sheetState={status:"err",code:"noconfig",at:sheetState.at}; rerender(); return; }
+  if(fetching) return; fetching=true;
+  sheetState={status:"loading",code:"",at:sheetState.at}; rerender();
+  try{
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),20000);
+    let res;
+    try{ res=await fetch(CFG.api+(CFG.api.includes("?")?"&":"?")+"k="+encodeURIComponent(CFG.key)+"&t="+Date.now(),{signal:ctl.signal,cache:"no-store",redirect:"follow"}); }
+    finally{ clearTimeout(to); }
+    let data; try{ data=await res.json(); }catch(e){ throw {code:"badjson"}; }
+    if(data&&data.error) throw {code:data.error==="forbidden"?"forbidden":"tool_error"};
+    if(!data||!Array.isArray(data.rec)) throw {code:"badjson"};
+    const raw={rec:data.rec,ing:data.ing||[],eta:data.eta||[],cat:data.cat||[]};
+    const at=Date.now();
+    if(applySheet(raw,at)){ sheetState={status:"ok",code:"",at}; try{localStorage.setItem(SRC_LS,JSON.stringify({raw,at}))}catch(e){} }
+  }catch(e){
+    const code=(e&&e.code)||(navigator.onLine===false?"offline":"upstream_error");
+    sheetState={status:"err",code,at:sheetState.at};
+  }
+  fetching=false; rerender();
+}
+try{ const c=JSON.parse(localStorage.getItem(SRC_LS)||"null"); if(c&&c.raw&&applySheet(c.raw,c.at)) render(); }catch(e){}
+fetchSheet(false);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&Date.now()-(sheetState.at||0)>10*60000) fetchSheet(false); });
+</script>
+<div id="update" hidden></div>
+<script src="native.js"></script>
+</body>
+</html>

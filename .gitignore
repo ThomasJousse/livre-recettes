@@ -1,0 +1,12 @@
+node_modules/
+www/config.js
+config.local.json
+*.jks
+*.keystore
+android/app/release/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+orig.html
+apps-script/Code.gs

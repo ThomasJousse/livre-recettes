@@ -1,0 +1,10 @@
+{
+  "appId": "app.livrerecettes",
+  "appName": "Livre de recettes",
+  "webDir": "www",
+  "android": { "backgroundColor": "#EEF1EE" },
+  "plugins": {
+    "SystemBars": { "insetsHandling": "native", "initialViewportFitValueHint": "cover", "style": "LIGHT" },
+    "LocalNotifications": { "smallIcon": "ic_stat_timer", "iconColor": "#1F5FA8" }
+  }
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- vapeur -->
+  <g fill="none" stroke="#F2C14E" stroke-width="30" stroke-linecap="round">
+    <path d="M430 330c-26-30 26-52 0-86"/>
+    <path d="M512 318c-26-30 26-52 0-86"/>
+    <path d="M594 330c-26-30 26-52 0-86"/>
+  </g>
+  <!-- couvercle -->
+  <rect x="478" y="372" width="68" height="36" rx="18" fill="#FFFFFF"/>
+  <path d="M318 470c0-48 86-74 194-74s194 26 194 74z" fill="#FFFFFF"/>
+  <!-- poignées -->
+  <rect x="266" y="512" width="80" height="44" rx="22" fill="#FFFFFF"/>
+  <rect x="678" y="512" width="80" height="44" rx="22" fill="#FFFFFF"/>
+  <!-- cuve -->
+  <path d="M318 488h388v120c0 70-56 116-124 116H442c-68 0-124-46-124-116z" fill="#FFFFFF"/>
+  <rect x="318" y="488" width="388" height="26" fill="#D6E3F2"/>
+</svg>
