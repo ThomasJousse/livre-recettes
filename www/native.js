@@ -53,7 +53,7 @@
       if(location.hash&&location.hash!=="#"){ history.back(); return; }
       App.exitApp();
     });
-    App.addListener("resume",()=>checkUpdate(false));
+    App.addListener("resume",()=>checkUpdate("resume"));
   }
 
   /* ---------- Mise à jour depuis les Releases GitHub ---------- */
@@ -71,24 +71,28 @@
       else { try{ localStorage.setItem(UP_LS,JSON.stringify({skip:v,at:Date.now()})); }catch(e){} }
       box.hidden=true; };
   }
-  async function checkUpdate(force){
-    if(!CFG.repo||!CFG.version) return;
+  /* mode : "start" (lancement, toujours vérifié), "resume" (retour dans l'app, au plus toutes les 10 min),
+     "manual" (bouton : ignore aussi le « plus tard »). Renvoie "new", "uptodate" ou "error". */
+  async function checkUpdate(mode){
+    if(!CFG.repo||!CFG.version) return "error";
     let memo={}; try{ memo=JSON.parse(localStorage.getItem(UP_LS)||"{}"); }catch(e){}
-    if(!force&&memo.checked&&Date.now()-memo.checked<3*3600000&&!memo.pending) return;
+    if(mode==="resume"&&memo.checked&&Date.now()-memo.checked<10*60000&&!memo.pending) return "uptodate";
     try{
-      const r=await fetch("https://api.github.com/repos/"+CFG.repo+"/releases/latest",{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});
-      if(!r.ok) return;
+      const r=await fetch("https://api.github.com/repos/"+CFG.repo+"/releases/latest?t="+Date.now(),{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});
+      if(!r.ok) return "error";
       const rel=await r.json();
       const asset=(rel.assets||[]).find(a=>/\.apk$/i.test(a.name));
       memo.checked=Date.now();
+      let res="uptodate";
       if(asset&&cmp(rel.tag_name,CFG.version)>0){
-        memo.pending=rel.tag_name;
-        const snoozed=memo.skip===rel.tag_name&&Date.now()-(memo.at||0)<24*3600000;
-        if(!snoozed||force) showUpdate(rel.tag_name,asset.browser_download_url,(rel.body||"").split("\n")[0].slice(0,140));
+        memo.pending=rel.tag_name; res="new";
+        const snoozed=memo.skip===rel.tag_name&&Date.now()-(memo.at||0)<12*3600000;
+        if(!snoozed||mode==="manual") showUpdate(rel.tag_name,asset.browser_download_url,(rel.body||"").split("\n")[0].slice(0,140));
       } else memo.pending=null;
       try{ localStorage.setItem(UP_LS,JSON.stringify(memo)); }catch(e){}
-    }catch(e){}
+      return res;
+    }catch(e){ return "error"; }
   }
-  window.Native.checkUpdate=()=>checkUpdate(true);
-  setTimeout(()=>checkUpdate(false),2500);
+  window.Native.checkUpdate=()=>checkUpdate("manual");
+  setTimeout(()=>checkUpdate("start"),2500);
 })();

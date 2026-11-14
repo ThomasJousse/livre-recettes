@@ -644,7 +644,8 @@ function renderListe(){
   <div class="chips" id="chips">${tags.map(([k,l])=>`<button type="button" class="chip ${filt.tag===k?"on":""}" data-act="tag" data-id="${k}" aria-pressed="${filt.tag===k}">${l}</button>`).join("")}</div>
   <div class="tools"><span class="small mut" id="count"></span><span class="spacer"></span><label class="small mut" for="tri">Trier</label><select class="tri" id="tri">${[["pays","Par pays"],["az","De A à Z"],["rapide","Les plus rapides"],["prix","Les moins chères"]].map(([k,l])=>`<option value="${k}" ${filt.sort===k?"selected":""}>${l}</option>`).join("")}</select></div>
   <div class="grid" id="grid"></div>
-  <p class="foot">Pour ajouter ou corriger une recette, modifie le <a href="${SHEET_URL}" target="_blank" rel="noopener">Google Sheet</a> (ou demande à Claude), puis touche Actualiser.</p>`;
+  <p class="foot">Pour ajouter ou corriger une recette, modifie le <a href="${SHEET_URL}" target="_blank" rel="noopener">Google Sheet</a> (ou demande à Claude), puis touche Actualiser.</p>
+  <p class="foot">${CFG.version?"Version "+esc(CFG.version)+" · ":""}<button type="button" class="btn ghost" style="padding:3px 10px;font-size:.82rem" data-act="update">Vérifier les mises à jour</button></p>`;
   renderGrid();
 }
 const norm=t=>String(t||"").toLowerCase().replace(/œ/g,"oe").replace(/æ/g,"ae").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -891,6 +892,11 @@ function handle(e){
       try{ navigator.clipboard.writeText(txt).then(()=>toast("Liste copiée, colle-la où tu veux"),fallback); }catch(err){ fallback(); }
       return; }
     case "sheet": fetchSheet(true); return;
+    case "update": {
+      if(!(window.Native&&Native.checkUpdate)){ toast("Vérification indisponible"); return; }
+      toast("Recherche d'une mise à jour…");
+      Native.checkUpdate().then(r=>{ if(r==="uptodate") toast("L'app est à jour (version "+CFG.version+")"); else if(r==="error") toast("Impossible de joindre GitHub. Réessaie avec du réseau."); });
+      return; }
     case "cook": openCook(id); return;
     case "cookclose": closeCook(); return;
     case "cknext": cook.i++; renderCook(); return;
