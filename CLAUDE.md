@@ -5,6 +5,7 @@ App Android perso (Capacitor 8, sans framework JS). Données : Google Sheet priv
 ## Mettre à jour
 - **Recettes** : modifier le Sheet (connecteur Google Sheets). Aucun build nécessaire.
 - **Versions simplifiée / authentique** : deux lignes dans l'onglet Recettes ; la ligne authentique porte l'`id` de la simplifiée dans la colonne `variante_de` (et le tag `authentique`). L'app les réunit en une seule fiche avec un sélecteur Simplifiée/Authentique ; le menu et la liste de courses utilisent la version sélectionnée. Si `variante_de` est vide, une recette taguée `authentique` est rattachée à la recette de même titre (hors « (version …) »), sinon à la ligne juste au-dessus.
+- **Pays** : colonne `pays` de l'onglet Recettes (nom en français : « Inde », « Chine », « La Réunion »…). Le drapeau est déduit du nom (table `ISO` dans index.html : ajouter le pays s'il manque). La liste se trie par pays par défaut.
 - **Code** : modifier `www/` (index.html = toute l'app, native.js = couche Android), augmenter `version` dans `package.json`, pousser sur `main`. Le workflow `.github/workflows/release.yml` compile l'APK signé et publie la Release `vX.Y.Z` ; l'app installée propose la mise à jour au lancement.
 - Ne jamais pousser de tag (refusé par le proxy) : la Release crée le tag côté GitHub.
 
