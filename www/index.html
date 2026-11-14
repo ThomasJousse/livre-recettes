@@ -455,13 +455,18 @@ function rebuild(){
   R={}; ORDER=[];
   const src=(SHEET_RECS||BASE).map(r=>Object.assign({},r,{alt:null,main:null}));
   src.forEach(r=>{ R[r.id]=r; });
-  const explicit=src.some(r=>typeof r.parent==="string");
+  const isAuth=r=>(r.tags||[]).includes("authentique");
+  const key=r=>norm(shortTitle(r.titre));
+  const free=m=>m&&!m.main&&!m.alt&&!isAuth(m);
   let prev=null;
   src.forEach(r=>{
     let m=null;
-    if(explicit){ if(r.parent&&r.parent!==r.id) m=R[r.parent]; }
-    else if((r.tags||[]).includes("authentique")) m=prev;
-    if(m&&!m.main&&!m.alt&&!r.alt){ m.alt=r.id; r.main=m.id; return; }
+    if(r.parent&&r.parent!==r.id) m=R[r.parent];
+    else if(isAuth(r)){
+      /* variante_de vide : même titre (sans « version … »), sinon la ligne juste au-dessus */
+      m=src.find(x=>x!==r&&free(x)&&key(x)===key(r))||prev;
+    }
+    if(m&&m!==r&&!m.main&&!m.alt&&!r.alt){ m.alt=r.id; r.main=m.id; return; }
     if(!ORDER.includes(r.id)) ORDER.push(r.id);
     prev=(r.tags||[]).includes("authentique")?null:r;
   });
