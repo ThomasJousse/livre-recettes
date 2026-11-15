@@ -2,6 +2,9 @@
 
 App Android perso (Capacitor 8, sans framework JS). Données : Google Sheet privé « Livre de recettes » (onglets Recettes, Ingrédients, Étapes, Catalogue) lu via un script Apps Script autonome (« Projet sans titre » / API Livre de recettes) protégé par une clé.
 
+## Ajouter ou modifier une recette
+**Avant tout ajout ou modification de recette, lire [`REGLES_RECETTES.md`](REGLES_RECETTES.md)** (ingrédients interdits, alcool, pas de four, légumineuses, format du Sheet, checklist) et la respecter.
+
 ## Mettre à jour
 - **Recettes** : modifier le Sheet (connecteur Google Sheets). Aucun build nécessaire.
 - **Versions simplifiée / authentique** : deux lignes dans l'onglet Recettes ; la ligne authentique porte l'`id` de la simplifiée dans la colonne `variante_de` (et le tag `authentique`). L'app les réunit en une seule fiche avec un sélecteur Simplifiée/Authentique ; le menu et la liste de courses utilisent la version sélectionnée. Si `variante_de` est vide, une recette taguée `authentique` est rattachée à la recette de même titre (hors « (version …) »), sinon à la ligne juste au-dessus.
