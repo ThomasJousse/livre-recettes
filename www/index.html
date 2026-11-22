@@ -992,6 +992,7 @@ function srcHTML(){
   if(s.status==="loading") return `<p class="src"><span class="dot"></span><span>${SHEET_RECS?"Copie du "+hhmm(s.at)+" affichée, lecture du Google Sheet…":"Lecture du Google Sheet…"}</span></p>`;
   const msg={
     noconfig:"L'adresse du Sheet n'est pas configurée dans cette version de l'app.",
+    gone:"Le script qui lit le Sheet n'existe plus à cette adresse : il faut le redéployer et mettre sa nouvelle adresse dans api.json (demande à Claude).",
     offline:"Pas de réseau.",
     forbidden:"Le script du Sheet refuse la clé de l'app. Vérifie la clé dans le script Apps Script.",
     badjson:"Le script du Sheet a répondu quelque chose d'inattendu. Vérifie qu'il est déployé en « Application Web », accès « Tout le monde ».",
@@ -1008,15 +1009,33 @@ function rerender(){
   box.innerHTML=srcHTML(); const n=document.getElementById("nrec"); if(n) n.textContent=ORDER.length+" recettes · sans four"; renderGrid();
 }
 let fetching=false;
+/* Adresse du script Apps Script : le fichier api.json du dépôt GitHub (modifiable sans recompiler l'app),
+   sinon la dernière adresse connue, sinon celle intégrée à la compilation. */
+const API_LS="livre-recettes-api";
+const okApi=u=>typeof u==="string"&&/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u);
+async function apiUrl(){
+  let known=""; try{ known=localStorage.getItem(API_LS)||""; }catch(e){}
+  if(CFG.repo){
+    try{
+      const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),6000);
+      const r=await fetch("https://raw.githubusercontent.com/"+CFG.repo+"/main/api.json?t="+Date.now(),{signal:ctl.signal,cache:"no-store"});
+      clearTimeout(to);
+      if(r.ok){ const j=await r.json(); if(okApi(j&&j.api)){ try{ localStorage.setItem(API_LS,j.api); }catch(e){} return j.api; } }
+    }catch(e){}
+  }
+  return okApi(known)?known:CFG.api;
+}
 async function fetchSheet(refresh){
-  if(!CFG.api||!CFG.key){ sheetState={status:"err",code:"noconfig",at:sheetState.at}; rerender(); return; }
+  if(!CFG.key){ sheetState={status:"err",code:"noconfig",at:sheetState.at}; rerender(); return; }
   if(fetching) return; fetching=true;
   sheetState={status:"loading",code:"",at:sheetState.at}; rerender();
   try{
-    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),20000);
+    const api=await apiUrl(); if(!api) throw {code:"noconfig"};
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),25000);
     let res;
-    try{ res=await fetch(CFG.api+(CFG.api.includes("?")?"&":"?")+"k="+encodeURIComponent(CFG.key)+"&t="+Date.now(),{signal:ctl.signal,cache:"no-store",redirect:"follow"}); }
+    try{ res=await fetch(api+(api.includes("?")?"&":"?")+"k="+encodeURIComponent(CFG.key)+"&t="+Date.now(),{signal:ctl.signal,cache:"no-store",redirect:"follow"}); }
     finally{ clearTimeout(to); }
+    if(res.status===404) throw {code:"gone"};
     let data; try{ data=await res.json(); }catch(e){ throw {code:"badjson"}; }
     if(data&&data.error) throw {code:data.error==="forbidden"?"forbidden":"tool_error"};
     if(!data||!Array.isArray(data.rec)) throw {code:"badjson"};
