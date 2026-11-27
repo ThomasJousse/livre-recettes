@@ -743,7 +743,7 @@ function renderCourses(){
     <div class="seg" role="group" aria-label="Unité">${[["repas","Repas"],["jours","Jours"],["semaines","Semaines"]].map(([k,l])=>`<button type="button" class="${st.mode===k?"on":""}" data-act="mode" data-id="${k}" aria-pressed="${st.mode===k}">${l}</button>`).join("")}</div>
     <div class="field"><label>Durée<small>${st.mode==="repas"?"repas principaux à couvrir":"nombre de "+unitL}</small></label>${stepper("inc",st.n,{min:1,max:maxN,field:"n",label:"Durée"})}</div>
     ${st.mode!=="repas"?`<div class="field" style="flex-direction:column;align-items:stretch"><label>Plats cuisinés par jour<small>le reste : sandwichs, cantine…</small></label><div class="seg two">${[1,2].map(v=>`<button type="button" class="${st.rpj===v?"on":""}" data-act="rpj" data-id="${v}">${v===1?"1 (soir)":"2 (midi + soir)"}</button>`).join("")}</div></div>`:""}
-    <div class="field"><label>Un plat cuisiné couvre<small>2 = tu manges les restes le lendemain</small></label>${stepper("inc",st.batch,{min:1,max:3,field:"batch",label:"Repas par plat"})}</div>
+    <div class="field"><label>Un plat cuisiné couvre<small>2 = tu cuisines pour 2 repas et manges les restes le lendemain ; les quantités suivent</small></label>${stepper("inc",st.batch,{min:1,max:3,field:"batch",label:"Repas par plat"})}</div>
     <div class="field"><label>Inclure riz et pâtes<small>dans la liste de courses</small></label><button type="button" class="box ${st.accomp?"on":""}" data-act="accomp" aria-pressed="${st.accomp}" aria-label="Inclure les accompagnements"></button></div>
     <div class="sum"><b>${p.T}</b><span>repas × ${fr(p.Pe)} portions = <b style="font-size:1.1rem">${fr(p.T*p.Pe)}</b> portions à cuisiner</span></div>`:""}
   </section>
@@ -869,7 +869,13 @@ function handle(e){
       save(); try{ history.replaceState(null,"","#r-"+to); }catch(e){ location.replace("#r-"+to); } render(); return; }
     case "por": { const r=R[id]; const v=(st.portions[id]||r.base)+d*0.5; st.portions[id]=Math.max(0.5,Math.min(30,Math.round(v*2)/2)); save(); render(); return; }
     case "got": { ingGot[id]=ingGot[id]||{}; ingGot[id][fld]=!ingGot[id][fld]; render(); return; }
-    case "inc": { const [a,z]=lims[fld]; st[fld]=Math.max(a,Math.min(z,st[fld]+d)); save(); render(); return; }
+    case "inc": { const [a,z]=lims[fld]; const old=st[fld]; st[fld]=Math.max(a,Math.min(z,st[fld]+d));
+      if(fld==="batch"&&st.batch!==old){
+        /* chaque plat garde son nombre de cuissons ; il couvre désormais st.batch repas par cuisson */
+        let n=0; for(const [id,m] of Object.entries(st.sel)){ if(!R[id]||!(m>0)) continue; st.sel[id]=Math.min(30,Math.max(1,Math.ceil(m/old))*st.batch); n++; }
+        if(n) toast("Chaque plat cuisiné couvre "+st.batch+" repas : quantités recalculées");
+      }
+      save(); render(); return; }
     case "mode": { st.mode=id; const z=id==="semaines"?8:id==="jours"?31:60; if(id==="semaines"&&st.n>4) st.n=1; if(id==="repas"&&st.n<3) st.n=6; st.n=Math.min(st.n,z); save(); render(); return; }
     case "rpj": st.rpj=Number(id); save(); render(); return;
     case "accomp": st.accomp=!st.accomp; save(); render(); return;
